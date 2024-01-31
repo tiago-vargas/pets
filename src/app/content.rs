@@ -2,29 +2,32 @@ use adw::prelude::*;
 use relm4::prelude::*;
 
 use crate::app::pet;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
+
+mod info_view;
 
 pub(crate) struct ContentModel {
-    selected_pet: Option<Rc<pet::Pet>>,
+    selected_pet: Option<Rc<RefCell<pet::Pet>>>,
     is_adding_pet: bool,
-    new_pet: Option<Rc<pet::Pet>>,
+    new_pet: Option<Rc<RefCell<pet::Pet>>>,
+    info_view: Controller<info_view::Model>,
 }
 
 pub(crate) struct ContentInit {
-    pub(crate) pet: Option<Rc<pet::Pet>>,
+    pub(crate) pet: Option<Rc<RefCell<pet::Pet>>>,
 }
 
 #[derive(Debug)]
 pub(crate) enum ContentInput {
-    ShowPet(Rc<pet::Pet>),
+    ShowPet(Rc<RefCell<pet::Pet>>),
     ShowAddPetPane,
-    UpdatePet(Rc<pet::Pet>),
+    UpdatePet(Rc<RefCell<pet::Pet>>),
     SendPetBack,
 }
 
 #[derive(Debug)]
 pub(crate) enum ContentOutput {
-    AddPet(Rc<pet::Pet>),
+    AddPet(Rc<RefCell<pet::Pet>>),
 }
 
 #[relm4::component(pub(crate))]
@@ -51,8 +54,8 @@ impl SimpleComponent for ContentModel {
 
                             connect_changed[sender] => move |entry| {
                                 let name = String::from(entry.text());
-                                let new_pet = pet::Pet { name };
-                                sender.input(Self::Input::UpdatePet(Rc::new(new_pet)));
+                                let new_pet = pet::Pet { name, ..pet::Pet::default() };
+                                sender.input(Self::Input::UpdatePet(Rc::new(RefCell::new(new_pet))));
                             },
 
                             connect_apply[sender] => move |entry| {
@@ -72,11 +75,24 @@ impl SimpleComponent for ContentModel {
                         None => adw::StatusPage {
                             set_title: "No Pet Selected",
                         }
-                        Some(pet) => &gtk::Label {
-                            #[watch] set_label: &pet.name,
-                            set_margin_all: 4,
-                            set_css_classes: &["title-1"],
-                            set_vexpand: true,
+                        Some(_) => &adw::Clamp {
+                            set_margin_all: 16,
+
+                            gtk::Box {
+                                set_orientation: gtk::Orientation::Vertical,
+                                set_spacing: 16,
+
+                                gtk::StackSwitcher {
+                                    set_stack: Some(&stack)
+                                },
+
+                                #[name(stack)]
+                                gtk::Stack {
+                                    set_transition_type: gtk::StackTransitionType::Crossfade,
+
+                                    add_named[Some("Info")] = model.info_view.widget(),
+                                }
+                            }
                         }
                     }
                 }
@@ -93,6 +109,9 @@ impl SimpleComponent for ContentModel {
             selected_pet: init.pet,
             is_adding_pet: false,
             new_pet: None,
+            info_view: info_view::Model::builder()
+                .launch(info_view::Init)
+                .detach(),
         };
 
         let widgets = view_output!();
@@ -103,6 +122,8 @@ impl SimpleComponent for ContentModel {
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             Self::Input::ShowPet(pet) => {
+                self.info_view.sender().send(info_view::Input::SetPet(Rc::clone(&pet)))
+                    .expect("Should be able to send message to child");
                 self.selected_pet = Some(pet);
                 self.is_adding_pet = false;
             }
@@ -121,6 +142,8 @@ impl SimpleComponent for ContentModel {
                         sender.output(Self::Output::AddPet(Rc::clone(pet)))
                             .expect("Should be able to send message to parent");
                         sender.input(Self::Input::ShowPet(Rc::clone(pet)));
+                        self.info_view.sender().send(info_view::Input::SetPet(Rc::clone(pet)))
+                            .expect("Should be able to send message to child");
                     }
                     None => (),
                 }

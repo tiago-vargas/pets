@@ -2,7 +2,7 @@ use adw::prelude::*;
 use relm4::{factory::FactoryVecDeque, prelude::*};
 
 use crate::config::BUILD_TYPE;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 mod actions;
 mod content;
@@ -20,7 +20,7 @@ pub(crate) struct AppModel {
 
 #[derive(Debug)]
 pub(crate) enum AppInput {
-    AddPet(Rc<pet::Pet>),
+    AddPet(Rc<RefCell<pet::Pet>>),
     ShowPet(usize),
     ShowAddPetPane,
 

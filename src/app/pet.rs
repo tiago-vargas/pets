@@ -4,3 +4,11 @@ pub(crate) mod pet_row;
 pub(crate) struct Pet {
     pub(crate) name: String,
 }
+
+impl Default for Pet {
+    fn default() -> Self {
+        Self {
+            name: String::from(""),
+        }
+    }
+}
