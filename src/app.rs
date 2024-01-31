@@ -8,6 +8,12 @@ mod settings;
 
 pub(crate) const APP_ID: &str = "com.github.tiago_vargas.pets";
 
+// These are here only because I can't use `cfg` in `view!`
+#[cfg(debug_assertions)]
+const PROFILE: &str = "dev";
+#[cfg(not(debug_assertions))]
+const PROFILE: &str = "release";
+
 pub(crate) struct AppModel {
     content: Controller<content::ContentModel>,
 }
@@ -44,7 +50,12 @@ impl SimpleComponent for AppModel {
     view! {
         main_window = adw::ApplicationWindow {
             set_title: Some("Pets"),
-            add_css_class: "devel",
+
+            add_css_class?: if PROFILE == "dev" {
+                Some("devel")
+            } else {
+                None
+            },
 
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
