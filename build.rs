@@ -21,6 +21,7 @@ fn build_for_release() {
     install_gschema();
     install_icons();
     install_desktop_file();
+    move_binary_to_bin();
 }
 
 fn install_gschema() {
@@ -149,4 +150,11 @@ fn update_desktop_database(location: &str) {
         .expect("Should be able to update desktop database");
 
     println!("Updating desktop database: {status}");
+}
+
+fn move_binary_to_bin() {
+    let binary = format!("target/release/pets");
+    let destination = format!("{HOME}/.local/bin/");
+    create_directory_if_needed(&destination);
+    copy(&binary, &destination);
 }
