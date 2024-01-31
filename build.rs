@@ -1,6 +1,6 @@
 use std::{env, process::Command};
 
-const APP_ID: &str = "com.github.tiago_vargas.relm4_app_template";
+const APP_ID: &str = "com.github.tiago_vargas.pets";
 const HOME: &str = env!("HOME");
 
 fn main() {
@@ -86,7 +86,7 @@ fn compile_schemas(location: &str) {
 }
 
 fn install_icons() {
-    let icons = format!("{HOME}/data/icons/hicolor");
+    let icons = format!("data/icons/hicolor");
     let destination = format!("{HOME}/.local/share/icons/hicolor/");
     copy_icons_and_create_path_if_needed(&icons, &destination);
     update_icon_cache(&destination);
