@@ -1,2 +1,3 @@
+pub const APP_ID: &str = @APPID@;
 pub const VERSION: &str = @VERSION@;
 pub const BUILD_TYPE: &str = @BUILDTYPE@;

@@ -8,8 +8,6 @@ mod content;
 mod modals;
 mod settings;
 
-pub(crate) const APP_ID: &str = "com.github.tiago_vargas.pets";
-
 pub(crate) struct AppModel {
     content: Controller<content::ContentModel>,
 }
