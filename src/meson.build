@@ -1,6 +1,7 @@
 build_type = get_option('buildtype')
 
 conf = configuration_data()
+conf.set_quoted('VERSION', meson.project_version())
 conf.set_quoted('BUILDTYPE', build_type)
 
 configure_file(

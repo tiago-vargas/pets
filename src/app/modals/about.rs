@@ -1,6 +1,6 @@
 use relm4::prelude::*;
 
-use crate::app;
+use crate::{app, config};
 
 pub(crate) struct Model;
 
@@ -23,7 +23,7 @@ impl SimpleComponent for Model {
             set_application_icon: app::APP_ID,
             set_application_name: "Pets",
             set_developer_name: "Tiago Vargas",
-            set_version: "0.1.0",
+            set_version: config::VERSION,
 
             set_website: "https://github.com/tiago-vargas/pets",
         }

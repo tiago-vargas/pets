@@ -1,1 +1,2 @@
+pub const VERSION: &str = @VERSION@;
 pub const BUILD_TYPE: &str = @BUILDTYPE@;
