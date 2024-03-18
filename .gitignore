@@ -2,3 +2,7 @@
 
 # VS Code files
 /.vscode
+
+# Flatpak files
+/.flatpak
+/.flatpak-builder

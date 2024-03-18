@@ -1,4 +1,4 @@
-use crate::app;
+use crate::{app, config::APP_ID};
 
 use relm4::prelude::*;
 use gtk::prelude::*;
@@ -21,7 +21,7 @@ impl Settings {
 
 impl app::AppModel {
     pub(super) fn save_window_state(widgets: &<Self as SimpleComponent>::Widgets) {
-        let settings = gtk::gio::Settings::new(app::APP_ID);
+        let settings = gtk::gio::Settings::new(APP_ID);
 
         let (width, height) = widgets.main_window.default_size();
         let _ = settings.set_int(Settings::WindowWidth.as_str(), width);
@@ -34,7 +34,7 @@ impl app::AppModel {
     }
 
     pub(super) fn load_window_state(widgets: &<Self as SimpleComponent>::Widgets) {
-        let settings = gtk::gio::Settings::new(app::APP_ID);
+        let settings = gtk::gio::Settings::new(APP_ID);
 
         let width = settings.int(Settings::WindowWidth.as_str());
         let height = settings.int(Settings::WindowHeight.as_str());

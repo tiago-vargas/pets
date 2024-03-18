@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Pets
-Exec=.local/bin/pets
+Exec=pets
 Icon=com.github.tiago_vargas.pets
 Terminal=false
 Type=Application
