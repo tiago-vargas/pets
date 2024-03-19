@@ -1,4 +1,4 @@
-use gtk::prelude::*;
+use adw::prelude::*;
 use relm4::prelude::*;
 
 use crate::config::BUILD_TYPE;
@@ -47,18 +47,43 @@ impl SimpleComponent for AppModel {
 
             add_css_class?: if BUILD_TYPE == "debug" { Some("devel") } else { None },
 
-            gtk::Box {
-                set_orientation: gtk::Orientation::Vertical,
+            adw::NavigationSplitView {
+                #[wrap(Some)]
+                set_sidebar = &adw::NavigationPage {
+                    set_title: "Pets",
 
-                adw::HeaderBar {
-                    pack_end = &gtk::MenuButton {
-                        set_icon_name: "open-menu-symbolic",
-                        set_menu_model: Some(&primary_menu),
-                    },
+                    #[wrap(Some)]
+                    set_child = &adw::ToolbarView {
+                        add_top_bar = &adw::HeaderBar {
+                            pack_end = &gtk::MenuButton {
+                                set_icon_name: "open-menu-symbolic",
+                                set_menu_model: Some(&primary_menu),
+                            },
+                        },
+
+                        #[wrap(Some)]
+                        set_content = &gtk::Label {
+                            set_label: "Sidebar",
+                            set_margin_all: 4,
+                            set_css_classes: &["title-1"],
+                            set_vexpand: true,
+                        },
+                    }
                 },
 
-                model.content.widget(),
-            }
+                #[wrap(Some)]
+                set_content = &adw::NavigationPage {
+                    set_title: "Pet Details",
+
+                    #[wrap(Some)]
+                    set_child = &adw::ToolbarView {
+                        add_top_bar = &adw::HeaderBar { },
+
+                        #[wrap(Some)]
+                        set_content = model.content.widget(),
+                    }
+                }
+            },
         }
     }
 
