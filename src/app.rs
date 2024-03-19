@@ -1,19 +1,25 @@
 use adw::prelude::*;
-use relm4::prelude::*;
+use relm4::{factory::FactoryVecDeque, prelude::*};
 
 use crate::config::BUILD_TYPE;
 
 mod actions;
 mod content;
 mod modals;
+mod pet;
 mod settings;
+
+use pet::pet_row;
 
 pub(crate) struct AppModel {
     content: Controller<content::ContentModel>,
+    pet_rows: FactoryVecDeque<pet_row::Model>,
 }
 
 #[derive(Debug)]
 pub(crate) enum AppInput {
+    AddPet(pet::Pet),
+
     ShowPreferencesWindow,
     ShowKeyboardShortcutsWindow,
     ShowHelpWindow,
@@ -62,11 +68,11 @@ impl SimpleComponent for AppModel {
                         },
 
                         #[wrap(Some)]
-                        set_content = &gtk::Label {
-                            set_label: "Sidebar",
-                            set_margin_all: 4,
-                            set_css_classes: &["title-1"],
-                            set_vexpand: true,
+                        set_content = &gtk::ScrolledWindow {
+                            #[local_ref]
+                            pet_list_box -> gtk::ListBox {
+                                add_css_class: "navigation-sidebar",
+                            },
                         },
                     }
                 },
@@ -95,12 +101,22 @@ impl SimpleComponent for AppModel {
         let content = content::ContentModel::builder()
             .launch(content::ContentInit)
             .detach();
-        let model = AppModel { content };
+        let pet_rows = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
+        let model = AppModel { content, pet_rows };
 
+        let pet_list_box = model.pet_rows.widget();
         let widgets = view_output!();
 
         Self::load_window_state(&widgets);
         Self::create_actions(&widgets, &sender);
+
+        /* FOR DEBUGGING ONLY */
+        sender.input(Self::Input::AddPet(pet::Pet { name: String::from("Pet 1") }));
+        sender.input(Self::Input::AddPet(pet::Pet { name: String::from("Pet 2") }));
+        sender.input(Self::Input::AddPet(pet::Pet { name: String::from("Pet 3") }));
+        sender.input(Self::Input::AddPet(pet::Pet { name: String::from("Pet 4") }));
+        sender.input(Self::Input::AddPet(pet::Pet { name: String::from("Pet 5") }));
+        /* --- --------- ---- */
 
         ComponentParts { model, widgets }
     }
@@ -109,6 +125,10 @@ impl SimpleComponent for AppModel {
         use modals::{about, help, keyboard_shortcuts, preferences};
 
         match message {
+            Self::Input::AddPet(pet) => {
+                self.pet_rows.guard().push_back(pet_row::Init { pet });
+            }
+
             Self::Input::ShowPreferencesWindow => {
                 let app = relm4::main_application();
                 let main_window = app.windows().first()
