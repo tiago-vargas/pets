@@ -3,13 +3,14 @@ use relm4::{factory::FactoryView, prelude::*};
 
 use crate::app::AppInput;
 use crate::app::pet::Pet;
+use std::rc::Rc;
 
 pub(crate) struct Model {
-    pub(crate) pet: Pet,
+	pub(crate) pet: Rc<Pet>,
 }
 
 pub(crate) struct Init {
-    pub(crate) pet: Pet,
+	pub(crate) pet: Rc<Pet>,
 }
 
 #[relm4::factory(pub(crate))]

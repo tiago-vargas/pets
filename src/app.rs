@@ -2,6 +2,7 @@ use adw::prelude::*;
 use relm4::{factory::FactoryVecDeque, prelude::*};
 
 use crate::config::BUILD_TYPE;
+use std::rc::Rc;
 
 mod actions;
 mod content;
@@ -18,7 +19,8 @@ pub(crate) struct AppModel {
 
 #[derive(Debug)]
 pub(crate) enum AppInput {
-    AddPet(pet::Pet),
+    AddPet(Rc<pet::Pet>),
+    ShowPet(usize),
 
     ShowPreferencesWindow,
     ShowKeyboardShortcutsWindow,
@@ -72,6 +74,15 @@ impl SimpleComponent for AppModel {
                             #[local_ref]
                             pet_list_box -> gtk::ListBox {
                                 add_css_class: "navigation-sidebar",
+
+                                connect_row_selected[sender] => move |_self, row| {
+                                    match row {
+                                        Some(row) => {
+                                            sender.input(Self::Input::ShowPet(row.index() as usize));
+                                        }
+                                        None => (),
+                                    }
+                                }
                             },
                         },
                     }
@@ -98,10 +109,10 @@ impl SimpleComponent for AppModel {
         window: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
+        let pet_rows = FactoryVecDeque::<pet_row::Model>::new(gtk::ListBox::default(), sender.input_sender());
         let content = content::ContentModel::builder()
-            .launch(content::ContentInit)
+            .launch(content::ContentInit { pet: None })
             .detach();
-        let pet_rows = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
         let model = AppModel { content, pet_rows };
 
         let pet_list_box = model.pet_rows.widget();
@@ -111,11 +122,11 @@ impl SimpleComponent for AppModel {
         Self::create_actions(&widgets, &sender);
 
         /* FOR DEBUGGING ONLY */
-        sender.input(Self::Input::AddPet(pet::Pet { name: String::from("Pet 1") }));
-        sender.input(Self::Input::AddPet(pet::Pet { name: String::from("Pet 2") }));
-        sender.input(Self::Input::AddPet(pet::Pet { name: String::from("Pet 3") }));
-        sender.input(Self::Input::AddPet(pet::Pet { name: String::from("Pet 4") }));
-        sender.input(Self::Input::AddPet(pet::Pet { name: String::from("Pet 5") }));
+        sender.input(Self::Input::AddPet(Rc::new(pet::Pet { name: String::from("Pet 1") })));
+        sender.input(Self::Input::AddPet(Rc::new(pet::Pet { name: String::from("Pet 2") })));
+        sender.input(Self::Input::AddPet(Rc::new(pet::Pet { name: String::from("Pet 3") })));
+        sender.input(Self::Input::AddPet(Rc::new(pet::Pet { name: String::from("Pet 4") })));
+        sender.input(Self::Input::AddPet(Rc::new(pet::Pet { name: String::from("Pet 5") })));
         /* --- --------- ---- */
 
         ComponentParts { model, widgets }
@@ -127,6 +138,10 @@ impl SimpleComponent for AppModel {
         match message {
             Self::Input::AddPet(pet) => {
                 self.pet_rows.guard().push_back(pet_row::Init { pet });
+            }
+            Self::Input::ShowPet(index) => {
+                self.content.sender().send(content::ContentInput::ShowPet(Rc::clone(&self.pet_rows[index].pet)))
+                    .expect("Should be able to forward message to child");
             }
 
             Self::Input::ShowPreferencesWindow => {
