@@ -59,3 +59,34 @@ impl FactoryComponent for Model {
         }
     }
 }
+
+pub(crate) trait Sort {
+    fn push_sorted(&mut self, pet_row: Init);
+}
+
+impl Sort for relm4::factory::FactoryVecDequeGuard<'_, Model> {
+    fn push_sorted(&mut self, pet_row: Init) {
+        let name = &pet_row.pet.name;
+
+        let names = self.iter()
+            .map(|row| &row.pet.name as &str)
+            .collect::<Vec<&str>>();
+
+        let index = find_index_to_insert(&names, &name);
+
+        self.insert(index, pet_row);
+    }
+}
+
+fn find_index_to_insert(names: &[&str], name: &str) -> usize {
+    match names.binary_search(&name) {
+        // Found `name` in the list.
+        // Insert here, nevertheless.
+        // Won't overwrite the previous one, just shift it.
+        Ok(index) => index,
+
+        // Didn't find `name` in the list.
+        // Insert here.
+        Err(index) => index,
+    }
+}

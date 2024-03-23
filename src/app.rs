@@ -11,6 +11,7 @@ mod pet;
 mod settings;
 
 use pet::pet_row;
+use pet_row::Sort;
 
 pub(crate) struct AppModel {
     content: Controller<content::ContentModel>,
@@ -143,7 +144,7 @@ impl SimpleComponent for AppModel {
 
         match message {
             Self::Input::AddPet(pet) => {
-                self.pet_rows.guard().push_back(pet_row::Init { pet });
+                self.pet_rows.guard().push_sorted(pet_row::Init { pet });
             }
             Self::Input::ShowPet(index) => {
                 self.content.sender().send(content::ContentInput::ShowPet(Rc::clone(&self.pet_rows[index].pet)))
