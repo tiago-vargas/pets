@@ -21,6 +21,7 @@ pub(crate) struct AppModel {
 pub(crate) enum AppInput {
     AddPet(Rc<pet::Pet>),
     ShowPet(usize),
+    ShowAddPetPane,
 
     ShowPreferencesWindow,
     ShowKeyboardShortcutsWindow,
@@ -63,6 +64,15 @@ impl SimpleComponent for AppModel {
                     #[wrap(Some)]
                     set_child = &adw::ToolbarView {
                         add_top_bar = &adw::HeaderBar {
+                            pack_start = &gtk::Button {
+                                set_icon_name: "list-add-symbolic",
+                                set_tooltip: "Add a Pet",
+
+                                connect_clicked[sender] => move |_| {
+                                    sender.input(Self::Input::ShowAddPetPane);
+                                }
+                            },
+
                             pack_end = &gtk::MenuButton {
                                 set_icon_name: "open-menu-symbolic",
                                 set_menu_model: Some(&primary_menu),
@@ -112,7 +122,11 @@ impl SimpleComponent for AppModel {
         let pet_rows = FactoryVecDeque::<pet_row::Model>::new(gtk::ListBox::default(), sender.input_sender());
         let content = content::ContentModel::builder()
             .launch(content::ContentInit { pet: None })
-            .detach();
+            .forward(sender.input_sender(), |response| {
+                match response {
+                    content::ContentOutput::AddPet(pet) => Self::Input::AddPet(pet),
+                }
+            });
         let model = AppModel { content, pet_rows };
 
         let pet_list_box = model.pet_rows.widget();
@@ -120,14 +134,6 @@ impl SimpleComponent for AppModel {
 
         Self::load_window_state(&widgets);
         Self::create_actions(&widgets, &sender);
-
-        /* FOR DEBUGGING ONLY */
-        sender.input(Self::Input::AddPet(Rc::new(pet::Pet { name: String::from("Pet 1") })));
-        sender.input(Self::Input::AddPet(Rc::new(pet::Pet { name: String::from("Pet 2") })));
-        sender.input(Self::Input::AddPet(Rc::new(pet::Pet { name: String::from("Pet 3") })));
-        sender.input(Self::Input::AddPet(Rc::new(pet::Pet { name: String::from("Pet 4") })));
-        sender.input(Self::Input::AddPet(Rc::new(pet::Pet { name: String::from("Pet 5") })));
-        /* --- --------- ---- */
 
         ComponentParts { model, widgets }
     }
@@ -141,6 +147,10 @@ impl SimpleComponent for AppModel {
             }
             Self::Input::ShowPet(index) => {
                 self.content.sender().send(content::ContentInput::ShowPet(Rc::clone(&self.pet_rows[index].pet)))
+                    .expect("Should be able to forward message to child");
+            }
+            Self::Input::ShowAddPetPane =>  {
+                self.content.sender().send(content::ContentInput::ShowAddPetPane)
                     .expect("Should be able to forward message to child");
             }
 
