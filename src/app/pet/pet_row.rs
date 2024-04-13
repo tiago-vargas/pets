@@ -54,9 +54,7 @@ impl FactoryComponent for Model {
     }
 
     fn update(&mut self, input: Self::Input, _sender: FactorySender<Self>) {
-        match input {
-            () => (),
-        }
+        let () = input;
     }
 }
 
@@ -73,7 +71,7 @@ impl Sort for relm4::factory::FactoryVecDequeGuard<'_, Model> {
             .map(|row| &row.pet.name as &str)
             .collect::<Vec<&str>>();
 
-        let index = find_index_to_insert(&names, &name);
+        let index = find_index_to_insert(&names, name);
 
         self.insert(index, pet_row);
     }

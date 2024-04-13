@@ -3,18 +3,18 @@ use crate::{app, config::APP_ID};
 use gtk::prelude::*;
 use relm4::prelude::*;
 
-pub(crate) enum Settings {
-    WindowWidth,
-    WindowHeight,
-    WindowMaximized,
+pub(crate) enum WindowSettings {
+    Width,
+    Height,
+    Maximized,
 }
 
-impl Settings {
+impl WindowSettings {
     pub(crate) fn as_str(&self) -> &str {
         match self {
-            Self::WindowWidth => "window-width",
-            Self::WindowHeight => "window-height",
-            Self::WindowMaximized => "window-maximized",
+            Self::Width => "window-width",
+            Self::Height => "window-height",
+            Self::Maximized => "window-maximized",
         }
     }
 }
@@ -24,11 +24,11 @@ impl app::AppModel {
         let settings = gtk::gio::Settings::new(APP_ID);
 
         let (width, height) = widgets.main_window.default_size();
-        let _ = settings.set_int(Settings::WindowWidth.as_str(), width);
-        let _ = settings.set_int(Settings::WindowHeight.as_str(), height);
+        let _ = settings.set_int(WindowSettings::Width.as_str(), width);
+        let _ = settings.set_int(WindowSettings::Height.as_str(), height);
 
         let _ = settings.set_boolean(
-            Settings::WindowMaximized.as_str(),
+            WindowSettings::Maximized.as_str(),
             widgets.main_window.is_maximized(),
         );
     }
@@ -36,11 +36,11 @@ impl app::AppModel {
     pub(super) fn load_window_state(widgets: &<Self as SimpleComponent>::Widgets) {
         let settings = gtk::gio::Settings::new(APP_ID);
 
-        let width = settings.int(Settings::WindowWidth.as_str());
-        let height = settings.int(Settings::WindowHeight.as_str());
+        let width = settings.int(WindowSettings::Width.as_str());
+        let height = settings.int(WindowSettings::Height.as_str());
         widgets.main_window.set_default_size(width, height);
 
-        let maximized = settings.boolean(Settings::WindowMaximized.as_str());
+        let maximized = settings.boolean(WindowSettings::Maximized.as_str());
         widgets.main_window.set_maximized(maximized);
     }
 }

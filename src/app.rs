@@ -94,11 +94,8 @@ impl SimpleComponent for AppModel {
                                         add_css_class: "navigation-sidebar",
 
                                         connect_row_selected[sender] => move |_self, row| {
-                                            match row {
-                                                Some(row) => {
-                                                    sender.input(Self::Input::ShowPet(row.index() as usize));
-                                                }
-                                                None => (),
+                                            if let Some(row) = row {
+                                                sender.input(Self::Input::ShowPet(row.index() as usize));
                                             }
                                         }
                                     },
@@ -215,6 +212,6 @@ impl SimpleComponent for AppModel {
     }
 
     fn shutdown(&mut self, widgets: &mut Self::Widgets, _output: relm4::Sender<Self::Output>) {
-        Self::save_window_state(&widgets);
+        Self::save_window_state(widgets);
     }
 }

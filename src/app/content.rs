@@ -118,9 +118,9 @@ impl SimpleComponent for ContentModel {
                 // using `output` directly.
                 match &self.new_pet {
                     Some(pet) => {
-                        sender.output(Self::Output::AddPet(Rc::clone(&pet)))
+                        sender.output(Self::Output::AddPet(Rc::clone(pet)))
                             .expect("Should be able to send message to parent");
-                        sender.input(Self::Input::ShowPet(Rc::clone(&pet)));
+                        sender.input(Self::Input::ShowPet(Rc::clone(pet)));
                     }
                     None => (),
                 }
