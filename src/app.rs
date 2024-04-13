@@ -81,21 +81,29 @@ impl SimpleComponent for AppModel {
                         },
 
                         #[wrap(Some)]
-                        set_content = &gtk::ScrolledWindow {
-                            #[local_ref]
-                            pet_list_box -> gtk::ListBox {
-                                add_css_class: "navigation-sidebar",
+                        set_content =
+                            if model.pet_rows.is_empty() {
+                                &adw::StatusPage {
+                                    set_title: "No Pets Yet",
+                                    set_description: Some("Use the + button to add pets."),
+                                }
+                            } else {
+                                &gtk::ScrolledWindow {
+                                    #[local_ref]
+                                    pet_list_box -> gtk::ListBox {
+                                        add_css_class: "navigation-sidebar",
 
-                                connect_row_selected[sender] => move |_self, row| {
-                                    match row {
-                                        Some(row) => {
-                                            sender.input(Self::Input::ShowPet(row.index() as usize));
+                                        connect_row_selected[sender] => move |_self, row| {
+                                            match row {
+                                                Some(row) => {
+                                                    sender.input(Self::Input::ShowPet(row.index() as usize));
+                                                }
+                                                None => (),
+                                            }
                                         }
-                                        None => (),
-                                    }
+                                    },
                                 }
                             },
-                        },
                     }
                 },
 
