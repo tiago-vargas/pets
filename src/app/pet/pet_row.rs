@@ -1,16 +1,16 @@
 use gtk::prelude::*;
 use relm4::{factory::FactoryView, prelude::*};
 
-use crate::app::AppInput;
 use crate::app::pet::Pet;
+use crate::app::AppInput;
 use std::rc::Rc;
 
 pub(crate) struct Model {
-	pub(crate) pet: Rc<Pet>,
+    pub(crate) pet: Rc<Pet>,
 }
 
 pub(crate) struct Init {
-	pub(crate) pet: Rc<Pet>,
+    pub(crate) pet: Rc<Pet>,
 }
 
 #[relm4::factory(pub(crate))]
@@ -55,7 +55,7 @@ impl FactoryComponent for Model {
 
     fn update(&mut self, input: Self::Input, _sender: FactorySender<Self>) {
         match input {
-            () => ()
+            () => (),
         }
     }
 }
@@ -68,7 +68,8 @@ impl Sort for relm4::factory::FactoryVecDequeGuard<'_, Model> {
     fn push_sorted(&mut self, pet_row: Init) {
         let name = &pet_row.pet.name;
 
-        let names = self.iter()
+        let names = self
+            .iter()
             .map(|row| &row.pet.name as &str)
             .collect::<Vec<&str>>();
 

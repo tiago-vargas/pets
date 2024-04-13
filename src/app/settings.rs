@@ -1,7 +1,7 @@
 use crate::{app, config::APP_ID};
 
-use relm4::prelude::*;
 use gtk::prelude::*;
+use relm4::prelude::*;
 
 pub(crate) enum Settings {
     WindowWidth,

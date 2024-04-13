@@ -128,7 +128,8 @@ impl SimpleComponent for AppModel {
         window: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let pet_rows = FactoryVecDeque::<pet_row::Model>::new(gtk::ListBox::default(), sender.input_sender());
+        let pet_rows =
+            FactoryVecDeque::<pet_row::Model>::new(gtk::ListBox::default(), sender.input_sender());
         let content = content::ContentModel::builder()
             .launch(content::ContentInit { pet: None })
             .forward(sender.input_sender(), |response| {
@@ -155,17 +156,25 @@ impl SimpleComponent for AppModel {
                 self.pet_rows.guard().push_sorted(pet_row::Init { pet });
             }
             Self::Input::ShowPet(index) => {
-                self.content.sender().send(content::ContentInput::ShowPet(Rc::clone(&self.pet_rows[index].pet)))
+                self.content
+                    .sender()
+                    .send(content::ContentInput::ShowPet(Rc::clone(
+                        &self.pet_rows[index].pet,
+                    )))
                     .expect("Should be able to forward message to child");
             }
-            Self::Input::ShowAddPetPane =>  {
-                self.content.sender().send(content::ContentInput::ShowAddPetPane)
+            Self::Input::ShowAddPetPane => {
+                self.content
+                    .sender()
+                    .send(content::ContentInput::ShowAddPetPane)
                     .expect("Should be able to forward message to child");
             }
 
             Self::Input::ShowPreferencesWindow => {
                 let app = relm4::main_application();
-                let main_window = app.windows().first()
+                let main_window = app
+                    .windows()
+                    .first()
                     .expect("Event should have been triggered by last focused window, thus first item")
                     .clone();
 
@@ -190,7 +199,9 @@ impl SimpleComponent for AppModel {
             }
             Self::Input::ShowAboutWindow => {
                 let app = relm4::main_application();
-                let main_window = app.windows().first()
+                let main_window = app
+                    .windows()
+                    .first()
                     .expect("Event should have been triggered by last focused window, thus first item")
                     .clone();
 
