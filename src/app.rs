@@ -1,19 +1,29 @@
-use gtk::prelude::*;
-use relm4::prelude::*;
+use adw::prelude::*;
+use relm4::{factory::FactoryVecDeque, prelude::*};
 
 use crate::config::BUILD_TYPE;
+use std::rc::Rc;
 
 mod actions;
 mod content;
 mod modals;
+mod pet;
 mod settings;
+
+use pet::pet_row;
+use pet_row::Sort;
 
 pub(crate) struct AppModel {
     content: Controller<content::ContentModel>,
+    pet_rows: FactoryVecDeque<pet_row::Model>,
 }
 
 #[derive(Debug)]
 pub(crate) enum AppInput {
+    AddPet(Rc<pet::Pet>),
+    ShowPet(usize),
+    ShowAddPetPane,
+
     ShowPreferencesWindow,
     ShowKeyboardShortcutsWindow,
     ShowHelpWindow,
@@ -47,18 +57,66 @@ impl SimpleComponent for AppModel {
 
             add_css_class?: if BUILD_TYPE == "debug" { Some("devel") } else { None },
 
-            gtk::Box {
-                set_orientation: gtk::Orientation::Vertical,
+            adw::NavigationSplitView {
+                #[wrap(Some)]
+                set_sidebar = &adw::NavigationPage {
+                    set_title: "Pets",
 
-                adw::HeaderBar {
-                    pack_end = &gtk::MenuButton {
-                        set_icon_name: "open-menu-symbolic",
-                        set_menu_model: Some(&primary_menu),
-                    },
+                    #[wrap(Some)]
+                    set_child = &adw::ToolbarView {
+                        add_top_bar = &adw::HeaderBar {
+                            pack_start = &gtk::Button {
+                                set_icon_name: "list-add-symbolic",
+                                set_tooltip: "Add a Pet",
+
+                                connect_clicked[sender] => move |_| {
+                                    sender.input(Self::Input::ShowAddPetPane);
+                                }
+                            },
+
+                            pack_end = &gtk::MenuButton {
+                                set_icon_name: "open-menu-symbolic",
+                                set_menu_model: Some(&primary_menu),
+                            },
+                        },
+
+                        #[wrap(Some)]
+                        set_content =
+                            if model.pet_rows.is_empty() {
+                                &adw::StatusPage {
+                                    set_title: "No Pets Yet",
+                                    set_description: Some("Use the + button to add pets."),
+                                }
+                            } else {
+                                &gtk::ScrolledWindow {
+                                    #[local_ref]
+                                    pet_list_box -> gtk::ListBox {
+                                        add_css_class: "navigation-sidebar",
+
+                                        connect_row_selected[sender] => move |_self, row| {
+                                            if let Some(row) = row {
+                                                sender.input(Self::Input::ShowPet(row.index() as usize));
+                                            }
+                                        }
+                                    },
+                                }
+                            },
+                    }
                 },
 
-                model.content.widget(),
-            }
+                #[wrap(Some)]
+                set_content = &adw::NavigationPage {
+                    set_title: "Pet Details",
+
+                    #[wrap(Some)]
+                    set_child = &adw::ToolbarView {
+                        add_top_bar = &adw::HeaderBar { },
+
+                        #[wrap(Some)]
+                        set_content = model.content.widget(),
+                    }
+                }
+            },
         }
     }
 
@@ -67,11 +125,18 @@ impl SimpleComponent for AppModel {
         window: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
+        let pet_rows =
+            FactoryVecDeque::<pet_row::Model>::new(gtk::ListBox::default(), sender.input_sender());
         let content = content::ContentModel::builder()
-            .launch(content::ContentInit)
-            .detach();
-        let model = AppModel { content };
+            .launch(content::ContentInit { pet: None })
+            .forward(sender.input_sender(), |response| {
+                match response {
+                    content::ContentOutput::AddPet(pet) => Self::Input::AddPet(pet),
+                }
+            });
+        let model = AppModel { content, pet_rows };
 
+        let pet_list_box = model.pet_rows.widget();
         let widgets = view_output!();
 
         Self::load_window_state(&widgets);
@@ -84,9 +149,29 @@ impl SimpleComponent for AppModel {
         use modals::{about, help, keyboard_shortcuts, preferences};
 
         match message {
+            Self::Input::AddPet(pet) => {
+                self.pet_rows.guard().push_sorted(pet_row::Init { pet });
+            }
+            Self::Input::ShowPet(index) => {
+                self.content
+                    .sender()
+                    .send(content::ContentInput::ShowPet(Rc::clone(
+                        &self.pet_rows[index].pet,
+                    )))
+                    .expect("Should be able to forward message to child");
+            }
+            Self::Input::ShowAddPetPane => {
+                self.content
+                    .sender()
+                    .send(content::ContentInput::ShowAddPetPane)
+                    .expect("Should be able to forward message to child");
+            }
+
             Self::Input::ShowPreferencesWindow => {
                 let app = relm4::main_application();
-                let main_window = app.windows().first()
+                let main_window = app
+                    .windows()
+                    .first()
                     .expect("Event should have been triggered by last focused window, thus first item")
                     .clone();
 
@@ -111,7 +196,9 @@ impl SimpleComponent for AppModel {
             }
             Self::Input::ShowAboutWindow => {
                 let app = relm4::main_application();
-                let main_window = app.windows().first()
+                let main_window = app
+                    .windows()
+                    .first()
                     .expect("Event should have been triggered by last focused window, thus first item")
                     .clone();
 
@@ -125,6 +212,6 @@ impl SimpleComponent for AppModel {
     }
 
     fn shutdown(&mut self, widgets: &mut Self::Widgets, _output: relm4::Sender<Self::Output>) {
-        Self::save_window_state(&widgets);
+        Self::save_window_state(widgets);
     }
 }
