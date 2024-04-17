@@ -20,7 +20,7 @@ pub(crate) struct AppModel {
 
 #[derive(Debug)]
 pub(crate) enum AppInput {
-    AddPet(Rc<RefCell<pet::Pet>>),
+    AddPetRow(Rc<RefCell<pet::Pet>>),
     SelectPet(usize),
     ShowAddPetPane,
 
@@ -131,7 +131,7 @@ impl SimpleComponent for AppModel {
             .launch(content::ContentInit { pet: None })
             .forward(sender.input_sender(), |response| {
                 match response {
-                    content::ContentOutput::AddPet(pet) => Self::Input::AddPet(pet),
+                    content::ContentOutput::AddPet(pet) => Self::Input::AddPetRow(pet),
                 }
             });
         let model = AppModel { content, pet_rows };
@@ -149,7 +149,7 @@ impl SimpleComponent for AppModel {
         use modals::{about, help, keyboard_shortcuts, preferences};
 
         match message {
-            Self::Input::AddPet(pet) => {
+            Self::Input::AddPetRow(pet) => {
                 self.pet_rows.guard().push_sorted(pet_row::Init { pet });
             }
             Self::Input::SelectPet(index) => {
