@@ -153,10 +153,11 @@ impl SimpleComponent for AppModel {
                 self.pet_rows.guard().push_sorted(pet_row::Init { pet });
             }
             Self::Input::SelectPet(index) => {
+                let selected_pet = &self.pet_rows[index].pet;
                 self.content
                     .sender()
                     .send(content::ContentInput::ShowPetDetails(Rc::clone(
-                        &self.pet_rows[index].pet,
+                        selected_pet
                     )))
                     .expect("Should be able to forward message to child");
             }
