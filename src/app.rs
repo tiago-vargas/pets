@@ -155,7 +155,7 @@ impl SimpleComponent for AppModel {
             Self::Input::SelectPet(index) => {
                 self.content
                     .sender()
-                    .send(content::ContentInput::ShowPet(Rc::clone(
+                    .send(content::ContentInput::ShowPetDetails(Rc::clone(
                         &self.pet_rows[index].pet,
                     )))
                     .expect("Should be able to forward message to child");

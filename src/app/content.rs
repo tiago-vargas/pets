@@ -19,7 +19,7 @@ pub(crate) struct ContentInit {
 
 #[derive(Debug)]
 pub(crate) enum ContentInput {
-    ShowPet(Rc<RefCell<pet::Pet>>),
+    ShowPetDetails(Rc<RefCell<pet::Pet>>),
     ShowAddPetPane,
     UpdatePet(Rc<RefCell<pet::Pet>>),
     SendPetBack,
@@ -121,7 +121,7 @@ impl SimpleComponent for ContentModel {
 
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
-            Self::Input::ShowPet(pet) => {
+            Self::Input::ShowPetDetails(pet) => {
                 self.info_view.sender().send(info_view::Input::SetPet(Rc::clone(&pet)))
                     .expect("Should be able to send message to child");
                 self.selected_pet = Some(pet);
@@ -141,7 +141,7 @@ impl SimpleComponent for ContentModel {
                     Some(pet) => {
                         sender.output(Self::Output::AddPet(Rc::clone(pet)))
                             .expect("Should be able to send message to parent");
-                        sender.input(Self::Input::ShowPet(Rc::clone(pet)));
+                        sender.input(Self::Input::ShowPetDetails(Rc::clone(pet)));
                         self.info_view.sender().send(info_view::Input::SetPet(Rc::clone(pet)))
                             .expect("Should be able to send message to child");
                     }
