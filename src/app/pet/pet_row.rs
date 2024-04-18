@@ -3,14 +3,15 @@ use relm4::{factory::FactoryView, prelude::*};
 
 use crate::app::pet::Pet;
 use crate::app::AppInput;
+use std::cell::RefCell;
 use std::rc::Rc;
 
 pub(crate) struct Model {
-    pub(crate) pet: Rc<Pet>,
+    pub(crate) pet: Rc<RefCell<Pet>>,
 }
 
 pub(crate) struct Init {
-    pub(crate) pet: Rc<Pet>,
+    pub(crate) pet: Rc<RefCell<Pet>>,
 }
 
 #[relm4::factory(pub(crate))]
@@ -25,7 +26,7 @@ impl FactoryComponent for Model {
 
     view! {
         gtk::Label {
-            set_text: &self.pet.name,
+            set_text: &self.pet.borrow().name,
             set_halign: gtk::Align::Start,
         }
     }
@@ -64,14 +65,21 @@ pub(crate) trait Sort {
 
 impl Sort for relm4::factory::FactoryVecDequeGuard<'_, Model> {
     fn push_sorted(&mut self, pet_row: Init) {
-        let name = &pet_row.pet.name;
+        let index = {
+            let name = &pet_row.pet.borrow().name;
 
-        let names = self
-            .iter()
-            .map(|row| &row.pet.name as &str)
-            .collect::<Vec<&str>>();
+            let names = self
+                .iter()
+                .map(|row| String::from(&row.pet.borrow().name))
+                .collect::<Vec<String>>();
 
-        let index = find_index_to_insert(&names, name);
+            let names = names
+                .iter()
+                .map(|name| &name as &str)
+                .collect::<Vec<&str>>();
+
+            find_index_to_insert(&names, name)
+        };
 
         self.insert(index, pet_row);
     }

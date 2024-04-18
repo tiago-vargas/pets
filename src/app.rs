@@ -2,7 +2,7 @@ use adw::prelude::*;
 use relm4::{factory::FactoryVecDeque, prelude::*};
 
 use crate::config::BUILD_TYPE;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 mod actions;
 mod content;
@@ -20,8 +20,8 @@ pub(crate) struct AppModel {
 
 #[derive(Debug)]
 pub(crate) enum AppInput {
-    AddPet(Rc<pet::Pet>),
-    ShowPet(usize),
+    AddPetRow(Rc<RefCell<pet::Pet>>),
+    SelectPet(usize),
     ShowAddPetPane,
 
     ShowPreferencesWindow,
@@ -95,7 +95,7 @@ impl SimpleComponent for AppModel {
 
                                         connect_row_selected[sender] => move |_self, row| {
                                             if let Some(row) = row {
-                                                sender.input(Self::Input::ShowPet(row.index() as usize));
+                                                sender.input(Self::Input::SelectPet(row.index() as usize));
                                             }
                                         }
                                     },
@@ -131,7 +131,7 @@ impl SimpleComponent for AppModel {
             .launch(content::ContentInit { pet: None })
             .forward(sender.input_sender(), |response| {
                 match response {
-                    content::ContentOutput::AddPet(pet) => Self::Input::AddPet(pet),
+                    content::ContentOutput::AddPet(pet) => Self::Input::AddPetRow(pet),
                 }
             });
         let model = AppModel { content, pet_rows };
@@ -149,14 +149,15 @@ impl SimpleComponent for AppModel {
         use modals::{about, help, keyboard_shortcuts, preferences};
 
         match message {
-            Self::Input::AddPet(pet) => {
+            Self::Input::AddPetRow(pet) => {
                 self.pet_rows.guard().push_sorted(pet_row::Init { pet });
             }
-            Self::Input::ShowPet(index) => {
+            Self::Input::SelectPet(index) => {
+                let selected_pet = &self.pet_rows[index].pet;
                 self.content
                     .sender()
-                    .send(content::ContentInput::ShowPet(Rc::clone(
-                        &self.pet_rows[index].pet,
+                    .send(content::ContentInput::ShowPetDetails(Rc::clone(
+                        selected_pet
                     )))
                     .expect("Should be able to forward message to child");
             }
