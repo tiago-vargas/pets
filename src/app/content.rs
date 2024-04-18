@@ -54,7 +54,7 @@ impl SimpleComponent for ContentModel {
 
                             connect_changed[sender] => move |entry| {
                                 let name = String::from(entry.text());
-                                let new_pet = pet::Pet { name, ..pet::Pet::default() };
+                                let new_pet = pet::Pet { name };
                                 sender.input(Self::Input::UpdatePet(Rc::new(RefCell::new(new_pet))));
                             },
 
