@@ -1,8 +1,8 @@
 use adw::prelude::*;
 use relm4::{factory::FactoryVecDeque, prelude::*};
 
-use crate::config::BUILD_TYPE;
-use std::{cell::RefCell, rc::Rc};
+use crate::config::{APP_ID, BUILD_TYPE};
+use std::{cell::RefCell, fs, rc::Rc};
 
 mod actions;
 mod content;
@@ -13,6 +13,8 @@ mod settings;
 use pet::pet_row;
 use pet_row::Sort;
 
+const DATA_FILE_NAME: &str = "data.yaml";
+
 pub(crate) struct AppModel {
     content: Controller<content::ContentModel>,
     pet_rows: FactoryVecDeque<pet_row::Model>,
@@ -20,6 +22,7 @@ pub(crate) struct AppModel {
 
 #[derive(Debug)]
 pub(crate) enum AppInput {
+    SavePets,
     AddPetRow(Rc<RefCell<pet::Pet>>),
     SelectPet(usize),
     ShowAddPetPane,
@@ -117,6 +120,11 @@ impl SimpleComponent for AppModel {
                     }
                 }
             },
+
+            connect_close_request[sender] => move |_| {
+                sender.input(Self::Input::SavePets);
+                gtk::Inhibit(false)
+            },
         }
     }
 
@@ -149,6 +157,24 @@ impl SimpleComponent for AppModel {
         use modals::{about, help, keyboard_shortcuts, preferences};
 
         match message {
+            Self::Input::SavePets => {
+                let pets = self.pet_rows
+                    .iter()
+                    .map(|pet_row| pet::Pet { name: pet_row.pet.borrow().name.clone() })
+                    .collect::<Vec<pet::Pet>>();
+
+                let mut path = gtk::glib::user_data_dir();
+                path.push(APP_ID);
+                fs::create_dir_all(&path)
+                    .expect("Should be able to create directory.");
+
+                path.push(DATA_FILE_NAME);
+                let file = fs::File::create(path)
+                    .expect("Should be able to create YAML file.");
+
+                serde_yml::to_writer(file, &pets)
+                    .expect("Should be able to write data to YAML file");
+            }
             Self::Input::AddPetRow(pet) => {
                 self.pet_rows.guard().push_sorted(pet_row::Init { pet });
             }
