@@ -1,8 +1,8 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub(crate) mod pet_row;
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub(crate) struct Pet {
     pub(crate) name: String,
 }

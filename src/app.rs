@@ -23,6 +23,7 @@ pub(crate) struct AppModel {
 #[derive(Debug)]
 pub(crate) enum AppInput {
     SavePets,
+    LoadPets,
     AddPetRow(Rc<RefCell<pet::Pet>>),
     SelectPet(usize),
     ShowAddPetPane,
@@ -121,6 +122,10 @@ impl SimpleComponent for AppModel {
                 }
             },
 
+            connect_show[sender] => move |_| {
+                sender.input(Self::Input::LoadPets);
+            },
+
             connect_close_request[sender] => move |_| {
                 sender.input(Self::Input::SavePets);
                 gtk::Inhibit(false)
@@ -153,7 +158,7 @@ impl SimpleComponent for AppModel {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+    fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         use modals::{about, help, keyboard_shortcuts, preferences};
 
         match message {
@@ -174,6 +179,22 @@ impl SimpleComponent for AppModel {
 
                 serde_yml::to_writer(file, &pets)
                     .expect("Should be able to write data to YAML file");
+            }
+            Self::Input::LoadPets => {
+                let mut path = gtk::glib::user_data_dir();
+                path.push(APP_ID);
+                path.push(DATA_FILE_NAME);
+
+                if let Ok(file) = fs::File::open(path) {
+                    let pets: Vec<pet::Pet> = serde_yml::from_reader(file)
+                        .expect("Should be able to read data from YAML file.");
+
+                    for pet in pets {
+                        sender.input(Self::Input::AddPetRow(Rc::new(RefCell::new(pet))));
+                    }
+                } else {
+                    // Assume it's the first time using the app.
+                }
             }
             Self::Input::AddPetRow(pet) => {
                 self.pet_rows.guard().push_sorted(pet_row::Init { pet });
