@@ -59,7 +59,7 @@ impl SimpleComponent for Model {
 
 							connect_changed[sender] => move |entry| {
 								let name = String::from(entry.text());
-								let new_pet = pet::Pet { name };
+								let new_pet = pet::Pet { name, ..Default::default() };
 								sender.input(Self::Input::UpdatePet(Rc::new(RefCell::new(new_pet))));
 							},
 

@@ -190,7 +190,13 @@ impl SimpleComponent for Model {
 			Self::Input::SavePets => {
 				let pets = self.pet_rows
 					.iter()
-					.map(|pet_row| pet::Pet { name: pet_row.pet.borrow().name.clone() })
+					.map(|pet_row| pet::Pet {
+						name: pet_row.pet.borrow().name.clone(),
+						gender: pet_row.pet.borrow().gender,
+						species: pet_row.pet.borrow().species,
+						birthdate: pet_row.pet.borrow().birthdate.clone(),
+						was_sterilized: pet_row.pet.borrow().was_sterilized,
+					})
 					.collect::<Vec<pet::Pet>>();
 
 				let mut path = gtk::glib::user_data_dir();
