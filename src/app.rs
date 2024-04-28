@@ -25,7 +25,7 @@ pub(crate) enum AppInput {
     SavePets,
     LoadPets,
     AddPetRow(Rc<RefCell<pet::Pet>>),
-    SelectPet(usize),
+    SelectPetRow(usize),
     ShowAddPetPane,
 
     ShowPreferencesWindow,
@@ -99,7 +99,7 @@ impl SimpleComponent for AppModel {
 
                                         connect_row_selected[sender] => move |_self, row| {
                                             if let Some(row) = row {
-                                                sender.input(Self::Input::SelectPet(row.index() as usize));
+                                                sender.input(Self::Input::SelectPetRow(row.index() as usize));
                                             }
                                         }
                                     },
@@ -199,7 +199,7 @@ impl SimpleComponent for AppModel {
             Self::Input::AddPetRow(pet) => {
                 self.pet_rows.guard().push_sorted(pet_row::Init { pet });
             }
-            Self::Input::SelectPet(index) => {
+            Self::Input::SelectPetRow(index) => {
                 let selected_pet = &self.pet_rows[index].pet;
                 self.content
                     .sender()
