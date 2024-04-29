@@ -5,12 +5,15 @@ use crate::app::pet;
 use std::{cell::RefCell, rc::Rc};
 
 mod details_view;
+mod edit_view;
 
 pub(crate) struct ContentModel {
     selected_pet: Option<Rc<RefCell<pet::Pet>>>,
     is_adding_pet: bool,
     new_pet: Option<Rc<RefCell<pet::Pet>>>,
+    visible_pane: Panes,
     details_view: Controller<details_view::Model>,
+    edit_view: Controller<edit_view::Model>,
 }
 
 pub(crate) struct ContentInit {
@@ -23,6 +26,8 @@ pub(crate) enum ContentInput {
     ShowAddPetPane,
     UpdatePet(Rc<RefCell<pet::Pet>>),
     SendPetBack,
+    SetVisiblePane(Panes),
+    ApplyChanges,
 }
 
 #[derive(Debug)]
@@ -82,15 +87,14 @@ impl SimpleComponent for ContentModel {
                                 set_orientation: gtk::Orientation::Vertical,
                                 set_spacing: 16,
 
-                                gtk::StackSwitcher {
-                                    set_stack: Some(&stack)
-                                },
-
-                                #[name(stack)]
                                 gtk::Stack {
                                     set_transition_type: gtk::StackTransitionType::Crossfade,
+                                    #[watch] set_visible_child_name: model.visible_pane.as_ref(),
 
-                                    add_named[Some("Pet Details")] = model.details_view.widget(),
+                                    add_named[Some(Panes::PetDetails.as_ref())] =
+                                        model.details_view.widget(),
+                                    add_named[Some(Panes::EditPet.as_ref())] =
+                                        model.edit_view.widget(),
                                 }
                             }
                         }
@@ -109,10 +113,14 @@ impl SimpleComponent for ContentModel {
             selected_pet: init.pet,
             is_adding_pet: false,
             new_pet: None,
+            visible_pane: Panes::PetDetails,
             details_view: details_view::Model::builder()
                 .launch(details_view::Init)
                 .detach(),
-        };
+            edit_view: edit_view::Model::builder()
+                .launch(edit_view::Init)
+                .detach(),
+            };
 
         let widgets = view_output!();
 
@@ -148,6 +156,27 @@ impl SimpleComponent for ContentModel {
                     None => (),
                 }
             }
+            Self::Input::SetVisiblePane(pane) => {
+                self.visible_pane = pane;
+            }
+            Self::Input::ApplyChanges => {
+                sender.input(Self::Input::SetVisiblePane(Panes::PetDetails));
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) enum Panes {
+    PetDetails,
+    EditPet,
+}
+
+impl AsRef<str> for Panes {
+    fn as_ref(&self) -> &str {
+        match self {
+            Panes::PetDetails => "Pet Details",
+            Panes::EditPet => "Edit Pet",
         }
     }
 }

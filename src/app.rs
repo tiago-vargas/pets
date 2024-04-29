@@ -18,6 +18,7 @@ const DATA_FILE_NAME: &str = "data.yaml";
 pub(crate) struct AppModel {
     content: Controller<content::ContentModel>,
     pet_rows: FactoryVecDeque<pet_row::Model>,
+    is_in_edit_mode: bool,
 }
 
 #[derive(Debug)]
@@ -27,6 +28,10 @@ pub(crate) enum AppInput {
     AddPetRow(Rc<RefCell<pet::Pet>>),
     SelectPetRow(usize),
     ShowAddPetPane,
+
+    ShowEditPetView,
+    ShowPetDetailsView,
+    ApplyChanges,
 
     ShowPreferencesWindow,
     ShowKeyboardShortcutsWindow,
@@ -114,7 +119,35 @@ impl SimpleComponent for AppModel {
 
                     #[wrap(Some)]
                     set_child = &adw::ToolbarView {
-                        add_top_bar = &adw::HeaderBar { },
+                        add_top_bar = &adw::HeaderBar {
+                            pack_start = &gtk::Button {
+                                set_label: "Cancel",
+                                #[watch] set_visible: model.is_in_edit_mode,
+
+                                connect_clicked[sender] => move |_| {
+                                    sender.input(AppInput::ShowPetDetailsView);
+                                },
+                            },
+
+                            pack_end = &gtk::Button {
+                                set_label: "Edit",
+                                #[watch] set_visible: !model.is_in_edit_mode,
+
+                                connect_clicked[sender] => move |_| {
+                                    sender.input(AppInput::ShowEditPetView);
+                                },
+                            },
+
+                            pack_end = &gtk::Button {
+                                set_label: "Apply",
+                                add_css_class: "suggested-action",
+                                #[watch] set_visible: model.is_in_edit_mode,
+
+                                connect_clicked[sender] => move |_| {
+                                    sender.input(AppInput::ApplyChanges);
+                                },
+                            },
+                        },
 
                         #[wrap(Some)]
                         set_content = model.content.widget(),
@@ -147,7 +180,11 @@ impl SimpleComponent for AppModel {
                     content::ContentOutput::AddPet(pet) => Self::Input::AddPetRow(pet),
                 }
             });
-        let model = AppModel { content, pet_rows };
+        let model = AppModel {
+            content,
+            pet_rows,
+            is_in_edit_mode: false,
+        };
 
         let pet_list_box = model.pet_rows.widget();
         let widgets = view_output!();
@@ -215,6 +252,23 @@ impl SimpleComponent for AppModel {
                     .expect("Should be able to forward message to child");
             }
 
+            Self::Input::ShowEditPetView => {
+                self.content.sender().send(content::ContentInput::SetVisiblePane(content::Panes::EditPet))
+                    .expect("Should be able to send message to child component");
+                self.is_in_edit_mode = true;
+            }
+            Self::Input::ShowPetDetailsView => {
+                self.content.sender().send(content::ContentInput::SetVisiblePane(content::Panes::PetDetails))
+                    .expect("Should be able to send message to child component");
+                self.is_in_edit_mode = false;
+            }
+            Self::Input::ApplyChanges => {
+                self.content.sender().send(content::ContentInput::ApplyChanges)
+                    .expect("Should be able to send message to child component");
+                self.is_in_edit_mode = false;
+            }
+
+            // Menu things
             Self::Input::ShowPreferencesWindow => {
                 let app = relm4::main_application();
                 let main_window = app
