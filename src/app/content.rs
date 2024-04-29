@@ -4,13 +4,13 @@ use relm4::prelude::*;
 use crate::app::pet;
 use std::{cell::RefCell, rc::Rc};
 
-mod info_view;
+mod details_view;
 
 pub(crate) struct ContentModel {
     selected_pet: Option<Rc<RefCell<pet::Pet>>>,
     is_adding_pet: bool,
     new_pet: Option<Rc<RefCell<pet::Pet>>>,
-    info_view: Controller<info_view::Model>,
+    details_view: Controller<details_view::Model>,
 }
 
 pub(crate) struct ContentInit {
@@ -90,7 +90,7 @@ impl SimpleComponent for ContentModel {
                                 gtk::Stack {
                                     set_transition_type: gtk::StackTransitionType::Crossfade,
 
-                                    add_named[Some("Info")] = model.info_view.widget(),
+                                    add_named[Some("Pet Details")] = model.details_view.widget(),
                                 }
                             }
                         }
@@ -109,8 +109,8 @@ impl SimpleComponent for ContentModel {
             selected_pet: init.pet,
             is_adding_pet: false,
             new_pet: None,
-            info_view: info_view::Model::builder()
-                .launch(info_view::Init)
+            details_view: details_view::Model::builder()
+                .launch(details_view::Init)
                 .detach(),
         };
 
@@ -122,7 +122,7 @@ impl SimpleComponent for ContentModel {
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             Self::Input::ShowPetDetails(pet) => {
-                self.info_view.sender().send(info_view::Input::SetPet(Rc::clone(&pet)))
+                self.details_view.sender().send(details_view::Input::SetPet(Rc::clone(&pet)))
                     .expect("Should be able to send message to child");
                 self.selected_pet = Some(pet);
                 self.is_adding_pet = false;
@@ -142,7 +142,7 @@ impl SimpleComponent for ContentModel {
                         sender.output(Self::Output::AddPet(Rc::clone(pet)))
                             .expect("Should be able to send message to parent");
                         sender.input(Self::Input::ShowPetDetails(Rc::clone(pet)));
-                        self.info_view.sender().send(info_view::Input::SetPet(Rc::clone(pet)))
+                        self.details_view.sender().send(details_view::Input::SetPet(Rc::clone(pet)))
                             .expect("Should be able to send message to child");
                     }
                     None => (),
