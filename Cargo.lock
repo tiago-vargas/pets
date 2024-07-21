@@ -1157,7 +1157,6 @@ version = "0.1.0"
 dependencies = [
  "libadwaita",
  "relm4",
- "relm4-components",
  "serde",
  "serde_yml",
 ]
@@ -1348,17 +1347,6 @@ dependencies = [
  "relm4-macros",
  "tokio",
  "tracing",
-]
-
-[[package]]
-name = "relm4-components"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5485d72dc94c12a59c571d80cf9a545e5b9a2f0ebc90ea5fd234929a9376f66d"
-dependencies = [
- "once_cell",
- "relm4",
- "tracker",
 ]
 
 [[package]]
@@ -1770,26 +1758,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
 dependencies = [
  "once_cell",
-]
-
-[[package]]
-name = "tracker"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff9636d15e370187f6bf55b79ce62ebf4221998bc0ba1774d7fa208b007f6bf8"
-dependencies = [
- "tracker-macros",
-]
-
-[[package]]
-name = "tracker-macros"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca029746fbe0efda3298205de77bf759d7fef23ac97902641e0b49a623b0455f"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.50",
 ]
 
 [[package]]
