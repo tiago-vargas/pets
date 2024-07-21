@@ -4,13 +4,16 @@ use relm4::prelude::*;
 use crate::app::pet;
 use std::{cell::RefCell, rc::Rc};
 
-mod info_view;
+mod details_view;
+mod edit_view;
 
 pub(crate) struct ContentModel {
     selected_pet: Option<Rc<RefCell<pet::Pet>>>,
     is_adding_pet: bool,
     new_pet: Option<Rc<RefCell<pet::Pet>>>,
-    info_view: Controller<info_view::Model>,
+    visible_pane: Panes,
+    details_view: Controller<details_view::Model>,
+    edit_view: Controller<edit_view::Model>,
 }
 
 pub(crate) struct ContentInit {
@@ -23,6 +26,8 @@ pub(crate) enum ContentInput {
     ShowAddPetPane,
     UpdatePet(Rc<RefCell<pet::Pet>>),
     SendPetBack,
+    SetVisiblePane(Panes),
+    ApplyChanges,
 }
 
 #[derive(Debug)]
@@ -82,15 +87,14 @@ impl SimpleComponent for ContentModel {
                                 set_orientation: gtk::Orientation::Vertical,
                                 set_spacing: 16,
 
-                                gtk::StackSwitcher {
-                                    set_stack: Some(&stack)
-                                },
-
-                                #[name(stack)]
                                 gtk::Stack {
                                     set_transition_type: gtk::StackTransitionType::Crossfade,
+                                    #[watch] set_visible_child_name: model.visible_pane.as_ref(),
 
-                                    add_named[Some("Info")] = model.info_view.widget(),
+                                    add_named[Some(Panes::PetDetails.as_ref())] =
+                                        model.details_view.widget(),
+                                    add_named[Some(Panes::EditPet.as_ref())] =
+                                        model.edit_view.widget(),
                                 }
                             }
                         }
@@ -109,10 +113,14 @@ impl SimpleComponent for ContentModel {
             selected_pet: init.pet,
             is_adding_pet: false,
             new_pet: None,
-            info_view: info_view::Model::builder()
-                .launch(info_view::Init)
+            visible_pane: Panes::PetDetails,
+            details_view: details_view::Model::builder()
+                .launch(details_view::Init)
                 .detach(),
-        };
+            edit_view: edit_view::Model::builder()
+                .launch(edit_view::Init)
+                .detach(),
+            };
 
         let widgets = view_output!();
 
@@ -122,7 +130,7 @@ impl SimpleComponent for ContentModel {
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             Self::Input::ShowPetDetails(pet) => {
-                self.info_view.sender().send(info_view::Input::SetPet(Rc::clone(&pet)))
+                self.details_view.sender().send(details_view::Input::SetPet(Rc::clone(&pet)))
                     .expect("Should be able to send message to child");
                 self.selected_pet = Some(pet);
                 self.is_adding_pet = false;
@@ -142,12 +150,33 @@ impl SimpleComponent for ContentModel {
                         sender.output(Self::Output::AddPet(Rc::clone(pet)))
                             .expect("Should be able to send message to parent");
                         sender.input(Self::Input::ShowPetDetails(Rc::clone(pet)));
-                        self.info_view.sender().send(info_view::Input::SetPet(Rc::clone(pet)))
+                        self.details_view.sender().send(details_view::Input::SetPet(Rc::clone(pet)))
                             .expect("Should be able to send message to child");
                     }
                     None => (),
                 }
             }
+            Self::Input::SetVisiblePane(pane) => {
+                self.visible_pane = pane;
+            }
+            Self::Input::ApplyChanges => {
+                sender.input(Self::Input::SetVisiblePane(Panes::PetDetails));
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) enum Panes {
+    PetDetails,
+    EditPet,
+}
+
+impl AsRef<str> for Panes {
+    fn as_ref(&self) -> &str {
+        match self {
+            Panes::PetDetails => "Pet Details",
+            Panes::EditPet => "Edit Pet",
         }
     }
 }
