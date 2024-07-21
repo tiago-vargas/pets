@@ -31,7 +31,7 @@ impl SimpleComponent for Model {
 
     fn init(
         _init: Self::Init,
-        root: &Self::Root,
+        root: Self::Root,
         _sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let model = Self;

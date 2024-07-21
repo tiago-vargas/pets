@@ -2,7 +2,6 @@ use gtk::prelude::*;
 use relm4::{factory::FactoryView, prelude::*};
 
 use crate::app::pet::Pet;
-use crate::app::AppInput;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -21,7 +20,6 @@ impl FactoryComponent for Model {
     type Output = ();
 
     type CommandOutput = ();
-    type ParentInput = AppInput;
     type ParentWidget = gtk::ListBox;
 
     view! {
@@ -29,10 +27,6 @@ impl FactoryComponent for Model {
             set_text: &self.pet.borrow().name,
             set_halign: gtk::Align::Start,
         }
-    }
-
-    fn forward_to_parent(_output: Self::Output) -> Option<Self::ParentInput> {
-        None
     }
 
     fn init_model(
@@ -46,7 +40,7 @@ impl FactoryComponent for Model {
     fn init_widgets(
         &mut self,
         _index: &Self::Index,
-        root: &Self::Root,
+        root: Self::Root,
         _returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
         _sender: FactorySender<Self>,
     ) -> Self::Widgets {

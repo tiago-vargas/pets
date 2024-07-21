@@ -1,4 +1,5 @@
 use adw::prelude::*;
+use gtk::glib;
 use relm4::{factory::FactoryVecDeque, prelude::*};
 
 use crate::config::{APP_ID, BUILD_TYPE};
@@ -153,18 +154,18 @@ impl SimpleComponent for AppModel {
 
             connect_close_request[sender] => move |_| {
                 sender.input(Self::Input::SavePets);
-                gtk::Inhibit(false)
+                glib::Propagation::Proceed
             },
         }
     }
 
     fn init(
         _init: Self::Init,
-        window: &Self::Root,
+        window: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let pet_rows =
-            FactoryVecDeque::<pet_row::Model>::new(gtk::ListBox::default(), sender.input_sender());
+            FactoryVecDeque::<pet_row::Model>::builder().launch_default().detach();
         let content = content::ContentModel::builder()
             .launch(content::ContentInit { pet: None })
             .forward(sender.input_sender(), |response| {

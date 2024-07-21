@@ -106,7 +106,7 @@ impl SimpleComponent for ContentModel {
 
     fn init(
         init: Self::Init,
-        root: &Self::Root,
+        root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let model = Self {

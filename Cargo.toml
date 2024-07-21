@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-libadwaita = { version = "0.4.4", features = ["v1_4"] }
-relm4 = { version = "0.6.2", features = ["libadwaita"] }
+libadwaita = { version = "0.7.0", features = ["v1_4"] }
+relm4 = { version = "0.9.0", features = ["libadwaita"] }
 serde = { version = "1.0.198", features = ["derive"] }
 serde_yml = "0.0.4"
