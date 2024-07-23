@@ -16,14 +16,14 @@ use pet_row::Sort;
 
 const DATA_FILE_NAME: &str = "data.yaml";
 
-pub(crate) struct AppModel {
-	content: Controller<content::ContentModel>,
+pub(crate) struct Model {
+	content: Controller<content::Model>,
 	pet_rows: FactoryVecDeque<pet_row::Model>,
 	current_view: content::Panes,
 }
 
 #[derive(Debug)]
-pub(crate) enum AppInput {
+pub(crate) enum Input {
 	SavePets,
 	LoadPets,
 	AddPetRow(Rc<RefCell<pet::Pet>>),
@@ -36,10 +36,10 @@ pub(crate) enum AppInput {
 }
 
 #[relm4::component(pub(crate))]
-impl SimpleComponent for AppModel {
+impl SimpleComponent for Model {
 	type Init = ();
 
-	type Input = AppInput;
+	type Input = Input;
 	type Output = ();
 
 	menu! {
@@ -115,7 +115,7 @@ impl SimpleComponent for AppModel {
 								#[watch] set_visible: model.is_in_edit_mode(),
 
 								connect_clicked[sender] => move |_| {
-									sender.input(AppInput::ShowPetDetailsView);
+									sender.input(Input::ShowPetDetailsView);
 								},
 							},
 
@@ -124,7 +124,7 @@ impl SimpleComponent for AppModel {
 								#[watch] set_visible: !model.is_in_edit_mode(),
 
 								connect_clicked[sender] => move |_| {
-									sender.input(AppInput::ShowEditPetView);
+									sender.input(Input::ShowEditPetView);
 								},
 							},
 
@@ -134,7 +134,7 @@ impl SimpleComponent for AppModel {
 								#[watch] set_visible: model.is_in_edit_mode(),
 
 								connect_clicked[sender] => move |_| {
-									sender.input(AppInput::ApplyChanges);
+									sender.input(Input::ApplyChanges);
 								},
 							},
 						},
@@ -163,14 +163,14 @@ impl SimpleComponent for AppModel {
 	) -> ComponentParts<Self> {
 		let pet_rows =
 			FactoryVecDeque::<pet_row::Model>::builder().launch_default().detach();
-		let content = content::ContentModel::builder()
-			.launch(content::ContentInit { pet: None })
+		let content = content::Model::builder()
+			.launch(content::Init { pet: None })
 			.forward(sender.input_sender(), |response| {
 				match response {
-					content::ContentOutput::AddPet(pet) => Self::Input::AddPetRow(pet),
+					content::Output::AddPet(pet) => Self::Input::AddPetRow(pet),
 				}
 			});
-		let model = AppModel {
+		let model = Model {
 			content,
 			pet_rows,
 			current_view: content::Panes::PetDetails,
@@ -228,7 +228,7 @@ impl SimpleComponent for AppModel {
 				let selected_pet = &self.pet_rows[index].pet;
 				self.content
 					.sender()
-					.send(content::ContentInput::ShowPetDetails(Rc::clone(
+					.send(content::Input::ShowPetDetails(Rc::clone(
 						selected_pet
 					)))
 					.expect("Should be able to forward message to child");
@@ -236,22 +236,22 @@ impl SimpleComponent for AppModel {
 			Self::Input::ShowAddPetPane => {
 				self.content
 					.sender()
-					.send(content::ContentInput::ShowAddPetPane)
+					.send(content::Input::ShowAddPetPane)
 					.expect("Should be able to forward message to child");
 			}
 
 			Self::Input::ShowEditPetView => {
-				self.content.sender().send(content::ContentInput::SetVisiblePane(content::Panes::EditPet))
+				self.content.sender().send(content::Input::SetVisiblePane(content::Panes::EditPet))
 					.expect("Should be able to send message to child component");
 				self.current_view = content::Panes::EditPet;
 			}
 			Self::Input::ShowPetDetailsView => {
-				self.content.sender().send(content::ContentInput::SetVisiblePane(content::Panes::PetDetails))
+				self.content.sender().send(content::Input::SetVisiblePane(content::Panes::PetDetails))
 					.expect("Should be able to send message to child component");
 				self.current_view = content::Panes::PetDetails;
 			}
 			Self::Input::ApplyChanges => {
-				self.content.sender().send(content::ContentInput::ApplyChanges)
+				self.content.sender().send(content::Input::ApplyChanges)
 					.expect("Should be able to send message to child component");
 				self.current_view = content::Panes::PetDetails;
 			}
@@ -263,7 +263,7 @@ impl SimpleComponent for AppModel {
 	}
 }
 
-impl AppModel {
+impl Model {
 	fn is_in_edit_mode(&self) -> bool {
 		match self.current_view {
 			content::Panes::EditPet => true,

@@ -7,7 +7,7 @@ use std::{cell::RefCell, rc::Rc};
 mod details_view;
 mod edit_view;
 
-pub(crate) struct ContentModel {
+pub(crate) struct Model {
 	selected_pet: Option<Rc<RefCell<pet::Pet>>>,
 	is_adding_pet: bool,
 	new_pet: Option<Rc<RefCell<pet::Pet>>>,
@@ -16,12 +16,12 @@ pub(crate) struct ContentModel {
 	edit_view: Controller<edit_view::Model>,
 }
 
-pub(crate) struct ContentInit {
+pub(crate) struct Init {
 	pub(crate) pet: Option<Rc<RefCell<pet::Pet>>>,
 }
 
 #[derive(Debug)]
-pub(crate) enum ContentInput {
+pub(crate) enum Input {
 	ShowPetDetails(Rc<RefCell<pet::Pet>>),
 	ShowAddPetPane,
 	UpdatePet(Rc<RefCell<pet::Pet>>),
@@ -31,16 +31,16 @@ pub(crate) enum ContentInput {
 }
 
 #[derive(Debug)]
-pub(crate) enum ContentOutput {
+pub(crate) enum Output {
 	AddPet(Rc<RefCell<pet::Pet>>),
 }
 
 #[relm4::component(pub(crate))]
-impl SimpleComponent for ContentModel {
-	type Init = ContentInit;
+impl SimpleComponent for Model {
+	type Init = Init;
 
-	type Input = ContentInput;
-	type Output = ContentOutput;
+	type Input = Input;
+	type Output = Output;
 
 	view! {
 		#[root]

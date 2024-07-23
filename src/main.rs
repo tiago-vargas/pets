@@ -7,5 +7,5 @@ use config::APP_ID;
 
 fn main() {
 	let app = RelmApp::new(APP_ID);
-	app.run::<app::AppModel>(());
+	app.run::<app::Model>(());
 }

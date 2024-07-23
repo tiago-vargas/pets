@@ -3,14 +3,14 @@ use relm4::{
 	prelude::*,
 };
 
-use super::{modals, AppModel};
+use super::{modals, Model};
 use modals::Modal;
 
 relm4::new_action_group!(pub(crate) AppActions, "app");
 
 relm4::new_stateless_action!(pub(crate) ShowAbout, AppActions, "about");
 
-impl AppModel {
+impl Model {
 	pub(crate) fn create_actions(
 		widgets: &<Self as SimpleComponent>::Widgets,
 		_sender: &ComponentSender<Self>,

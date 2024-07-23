@@ -19,7 +19,7 @@ impl WindowSettings {
 	}
 }
 
-impl app::AppModel {
+impl app::Model {
 	pub(super) fn save_window_state(widgets: &<Self as SimpleComponent>::Widgets) {
 		let settings = gtk::gio::Settings::new(APP_ID);
 
