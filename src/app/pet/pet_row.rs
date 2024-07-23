@@ -69,7 +69,7 @@ impl Sort for relm4::factory::FactoryVecDequeGuard<'_, Model> {
 
 			let names = names
 				.iter()
-				.map(|name| &name as &str)
+				.map(|name| name as &str)
 				.collect::<Vec<&str>>();
 
 			find_index_to_insert(&names, name)
