@@ -73,7 +73,7 @@ impl SimpleComponent for AppModel {
 
 								connect_clicked[sender] => move |_| {
 									sender.input(Self::Input::ShowAddPetPane);
-								}
+								},
 							},
 
 							pack_end = &gtk::MenuButton {
@@ -99,11 +99,11 @@ impl SimpleComponent for AppModel {
 											if let Some(row) = row {
 												sender.input(Self::Input::SelectPetRow(row.index() as usize));
 											}
-										}
+										},
 									},
 								}
 							},
-					}
+					},
 				},
 
 				#[wrap(Some)]
@@ -144,8 +144,8 @@ impl SimpleComponent for AppModel {
 
 						#[wrap(Some)]
 						set_content = model.content.widget(),
-					}
-				}
+					},
+				},
 			},
 
 			connect_show[sender] => move |_| {
