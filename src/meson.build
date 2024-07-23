@@ -8,7 +8,7 @@ conf.set_quoted('BUILD_TYPE', build_type)
 _ = configure_file(
 	input: 'config.rs.in',
 	output: 'config.rs',
-	configuration: conf
+	configuration: conf,
 )
 
 # Copy the config.rs output to the source directory.
@@ -43,5 +43,5 @@ _ = custom_target(
 		'env', cargo_env,
 		cargo_bin, 'build',
 		cargo_opt, '&&', 'cp', 'src' / rust_target / meson.project_name(), '@OUTPUT@',
-	]
+	],
 )
