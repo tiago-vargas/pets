@@ -33,9 +33,6 @@ pub(crate) enum AppInput {
     ShowPetDetailsView,
     ApplyChanges,
 
-    ShowPreferencesWindow,
-    ShowKeyboardShortcutsWindow,
-    ShowHelpWindow,
     ShowAboutWindow,
 }
 
@@ -52,9 +49,6 @@ impl SimpleComponent for AppModel {
     menu! {
         primary_menu: {
             section! {
-                "Preferences" => actions::ShowPreferences,
-                "Keyboard Shortcuts" => actions::ShowKeyboardShortcuts,
-                "Help" => actions::ShowHelp,
                 "About App" => actions::ShowAbout,
             },
         }
@@ -196,7 +190,7 @@ impl SimpleComponent for AppModel {
     }
 
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
-        use modals::{about, help, keyboard_shortcuts, preferences};
+        use modals::about;
 
         match message {
             Self::Input::SavePets => {
@@ -269,33 +263,6 @@ impl SimpleComponent for AppModel {
             }
 
             // Menu things
-            Self::Input::ShowPreferencesWindow => {
-                let app = relm4::main_application();
-                let main_window = app
-                    .windows()
-                    .first()
-                    .expect("Event should have been triggered by last focused window, thus first item")
-                    .clone();
-
-                let preferences_window = preferences::Model::builder()
-                    .transient_for(&main_window)
-                    .launch(preferences::Init)
-                    .detach();
-
-                preferences_window.widget().present();
-            }
-            Self::Input::ShowKeyboardShortcutsWindow => {
-                let keyboard_shortcuts_window = keyboard_shortcuts::Model::builder()
-                    .launch(keyboard_shortcuts::Init)
-                    .detach();
-                keyboard_shortcuts_window.widget().present();
-            }
-            Self::Input::ShowHelpWindow => {
-                let help_window = help::Model::builder()
-                    .launch(help::Init)
-                    .detach();
-                help_window.widget().present();
-            }
             Self::Input::ShowAboutWindow => {
                 let app = relm4::main_application();
                 let main_window = app
