@@ -35,15 +35,12 @@ pub(crate) enum AppInput {
 	ApplyChanges,
 }
 
-#[derive(Debug)]
-pub(crate) enum AppOutput {}
-
 #[relm4::component(pub(crate))]
 impl SimpleComponent for AppModel {
 	type Init = ();
 
 	type Input = AppInput;
-	type Output = AppOutput;
+	type Output = ();
 
 	menu! {
 		primary_menu: {

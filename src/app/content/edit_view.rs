@@ -5,17 +5,11 @@ pub(crate) struct Model;
 
 pub(crate) struct Init;
 
-#[derive(Debug)]
-pub(crate) enum Input {}
-
-#[derive(Debug)]
-pub(crate) enum Output {}
-
 #[relm4::component(pub(crate))]
 impl SimpleComponent for Model {
 	type Init = Init;
-	type Input = Input;
-	type Output = Output;
+	type Input = ();
+	type Output = ();
 
 	view! {
 		gtk::Label {
@@ -37,6 +31,6 @@ impl SimpleComponent for Model {
 	}
 
 	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
-		match message {}
+		let () = message;
 	}
 }

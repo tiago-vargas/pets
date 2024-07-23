@@ -15,14 +15,11 @@ pub(crate) enum Input {
 	SetPet(Rc<RefCell<Pet>>),
 }
 
-#[derive(Debug)]
-pub(crate) enum Output {}
-
 #[relm4::component(pub(crate))]
 impl SimpleComponent for Model {
 	type Init = Init;
 	type Input = Input;
-	type Output = Output;
+	type Output = ();
 
 	view! {
 		gtk::Box {
