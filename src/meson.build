@@ -5,14 +5,14 @@ conf.set_quoted('APP_ID', application_id)
 conf.set_quoted('VERSION', meson.project_version())
 conf.set_quoted('BUILD_TYPE', build_type)
 
-configure_file(
+_ = configure_file(
 	input: 'config.rs.in',
 	output: 'config.rs',
 	configuration: conf
 )
 
 # Copy the config.rs output to the source directory.
-run_command(
+_ = run_command(
 	'cp',
 	meson.project_build_root() / 'src' / 'config.rs',
 	meson.project_source_root() / 'src' / 'config.rs',
@@ -31,7 +31,7 @@ else
 	rust_target = 'debug'
 endif
 
-cargo_build = custom_target(
+_ = custom_target(
 	'cargo-build',
 	build_by_default: true,
 	build_always_stale: true,
