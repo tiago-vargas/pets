@@ -32,8 +32,6 @@ pub(crate) enum AppInput {
     ShowEditPetView,
     ShowPetDetailsView,
     ApplyChanges,
-
-    ShowAboutWindow,
 }
 
 #[derive(Debug)]
@@ -190,8 +188,6 @@ impl SimpleComponent for AppModel {
     }
 
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
-        use modals::about;
-
         match message {
             Self::Input::SavePets => {
                 let pets = self.pet_rows
@@ -260,22 +256,6 @@ impl SimpleComponent for AppModel {
                 self.content.sender().send(content::ContentInput::ApplyChanges)
                     .expect("Should be able to send message to child component");
                 self.current_view = content::Panes::PetDetails;
-            }
-
-            // Menu things
-            Self::Input::ShowAboutWindow => {
-                let app = relm4::main_application();
-                let main_window = app
-                    .windows()
-                    .first()
-                    .expect("Event should have been triggered by last focused window, thus first item")
-                    .clone();
-
-                let about_window = about::Model::builder()
-                    .transient_for(&main_window)
-                    .launch(about::Init)
-                    .detach();
-                about_window.widget().present();
             }
         }
     }
