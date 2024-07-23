@@ -1,9 +1,9 @@
 build_type = get_option('buildtype')
 
 conf = configuration_data()
-conf.set_quoted('APPID', application_id)
+conf.set_quoted('APP_ID', application_id)
 conf.set_quoted('VERSION', meson.project_version())
-conf.set_quoted('BUILDTYPE', build_type)
+conf.set_quoted('BUILD_TYPE', build_type)
 
 configure_file(
 	input: 'config.rs.in',
