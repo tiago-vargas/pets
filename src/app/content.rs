@@ -43,7 +43,6 @@ impl SimpleComponent for Model {
 	type Output = Output;
 
 	view! {
-		#[root]
 		adw::Bin {  // `if` needs an outer widget
 			if model.is_adding_pet {
 				adw::Bin {
