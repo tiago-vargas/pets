@@ -130,7 +130,9 @@ impl SimpleComponent for Model {
 	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
 		match message {
 			Self::Input::ShowPetDetails(pet) => {
-				self.details_view.sender().send(details_view::Input::SetPet(Rc::clone(&pet)))
+				self.details_view
+					.sender()
+					.send(details_view::Input::SetPet(Rc::clone(&pet)))
 					.expect("Should be able to send message to child");
 				self.selected_pet = Some(pet);
 				self.is_adding_pet = false;
@@ -147,10 +149,13 @@ impl SimpleComponent for Model {
 				// using `output` directly.
 				match &self.new_pet {
 					Some(pet) => {
-						sender.output(Self::Output::AddPet(Rc::clone(pet)))
+						sender
+							.output(Self::Output::AddPet(Rc::clone(pet)))
 							.expect("Should be able to send message to parent");
 						sender.input(Self::Input::ShowPetDetails(Rc::clone(pet)));
-						self.details_view.sender().send(details_view::Input::SetPet(Rc::clone(pet)))
+						self.details_view
+							.sender()
+							.send(details_view::Input::SetPet(Rc::clone(pet)))
 							.expect("Should be able to send message to child");
 					}
 					None => (),
