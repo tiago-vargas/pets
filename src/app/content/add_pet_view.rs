@@ -14,7 +14,7 @@ pub(crate) struct Init;
 
 #[derive(Debug)]
 pub(crate) enum Input {
-	SendPetBack,
+	Confirm,
 	UpdatePet(Rc<RefCell<pet::Pet>>),
 }
 
@@ -48,7 +48,7 @@ impl SimpleComponent for Model {
 					},
 
 					connect_apply[sender] => move |entry| {
-						sender.input(Self::Input::SendPetBack);
+						sender.input(Self::Input::Confirm);
 						entry.set_text("");
 					},
 
@@ -80,7 +80,7 @@ impl SimpleComponent for Model {
 			Self::Input::UpdatePet(pet) => {
 				self.sandbox_pet = Rc::clone(&pet);
 			}
-			Self::Input::SendPetBack => {
+			Self::Input::Confirm => {
 				sender
 					.output(Self::Output::AddPet(Rc::clone(&self.sandbox_pet)))
 					.expect("Should be able to send message to parent");
