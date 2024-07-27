@@ -36,6 +36,46 @@ impl SimpleComponent for Model {
 				#[watch] set_text: &model.pet.borrow().name,
 				set_css_classes: &["large-title"],
 			},
+
+			gtk::ListBox {
+				set_css_classes: &["boxed-list"],
+
+				adw::ActionRow {
+					set_title: "Species",
+					#[watch] set_subtitle: &model.pet.borrow().species.to_string(),
+
+					add_css_class: "property",
+				},
+
+				adw::ActionRow {
+					set_title: "Gender",
+					#[watch] set_subtitle: &model.pet.borrow().gender.to_string(),
+
+					add_css_class: "property",
+				},
+
+				adw::ActionRow {
+					set_title: "Birthdate",
+					#[watch] set_subtitle: &model.pet.borrow().birthdate.0.format("%d/%m/%Y")
+						.expect("Format should exist"),
+
+					add_css_class: "property",
+				},
+
+				adw::ActionRow {
+					set_title: "Age",
+					#[watch] set_subtitle: &model.pet.borrow().age(),
+
+					add_css_class: "property",
+				},
+
+				adw::ActionRow {
+					set_title: "Was spayed/neutered?",
+					#[watch] set_subtitle: if model.pet.borrow().was_sterilized { "Yes" } else { "No" },
+
+					add_css_class: "property",
+				},
+			},
 		}
 	}
 

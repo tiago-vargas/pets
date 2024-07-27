@@ -1,3 +1,5 @@
+use std::fmt;
+
 use gtk::glib;
 use relm4::prelude::*;
 
@@ -21,11 +23,29 @@ pub(crate) enum Gender {
 	Female,
 }
 
+impl fmt::Display for Gender {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			Gender::Male => write!(f, "Male"),
+			Gender::Female => write!(f, "Female"),
+		}
+	}
+}
+
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
 pub(crate) enum Species {
 	#[default]
 	Cat,
 	Dog,
+}
+
+impl fmt::Display for Species {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			Self::Cat => write!(f, "Cat"),
+			Self::Dog => write!(f, "Dog"),
+		}
+	}
 }
 
 /// A wrapper around `glib::DateTime` to allow custom serialization and
@@ -59,5 +79,32 @@ impl<'de> Deserialize<'de> for Birthdate {
 impl Default for Birthdate {
 	fn default() -> Self {
 		Self(glib::DateTime::now_local().expect("Should be able to get current date and time"))
+	}
+}
+
+impl Pet {
+	pub(crate) fn age(&self) -> String {
+		let now = glib::DateTime::now_local().expect("Should be able to get current date and time");
+
+		struct Age {
+			year: i32,
+			month: i32,
+			day: i32,
+		}
+
+		let age = Age {
+			year: now.year() - self.birthdate.0.year(),
+			month: now.month() - self.birthdate.0.month(),
+			day: now.day_of_month() - self.birthdate.0.day_of_month(),
+		};
+
+		match age {
+			Age { year: 0, month: 0, day: 1} => String::from("1 day"),
+			Age { year: 0, month: 0, day} => format!("{day} days"),
+			Age { year: 0, month: 1, ..} => String::from("1 month"),
+			Age { year: 0, month, ..} => format!("{month} months"),
+			Age { year: 1, .. } => String::from("1 year"),
+			Age { year, .. } => format!("{year} years"),
+		}
 	}
 }
