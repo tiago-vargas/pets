@@ -4,14 +4,15 @@ use relm4::prelude::*;
 use crate::app::pet;
 use std::{cell::RefCell, rc::Rc};
 
+mod add_pet_view;
 mod details_view;
 mod edit_view;
 
 pub(crate) struct Model {
 	selected_pet: Option<Rc<RefCell<pet::Pet>>>,
 	is_adding_pet: bool,
-	new_pet: Option<Rc<RefCell<pet::Pet>>>,
 	visible_pane: Panes,
+	add_pet_view: Controller<add_pet_view::Model>,
 	details_view: Controller<details_view::Model>,
 	edit_view: Controller<edit_view::Model>,
 }
@@ -24,8 +25,7 @@ pub(crate) struct Init {
 pub(crate) enum Input {
 	ShowPetDetails(Rc<RefCell<pet::Pet>>),
 	ShowAddPetPane,
-	UpdatePet(Rc<RefCell<pet::Pet>>),
-	SendPetBack,
+	SendPetBack(Rc<RefCell<pet::Pet>>),
 	SetVisiblePane(Panes),
 	ApplyChanges,
 }
@@ -46,33 +46,9 @@ impl SimpleComponent for Model {
 		#[root]
 		adw::Bin {  // `if` needs an outer widget
 			if model.is_adding_pet {
-				gtk::Box {
-					set_orientation: gtk::Orientation::Vertical,
-
-					gtk::ListBox {
-						set_margin_all: 16,
-						add_css_class: "boxed-list",
-
-						adw::EntryRow {
-							set_title: "Pet Name",
-							set_show_apply_button: true,
-
-							connect_changed[sender] => move |entry| {
-								let name = String::from(entry.text());
-								let new_pet = pet::Pet { name, ..Default::default() };
-								sender.input(Self::Input::UpdatePet(Rc::new(RefCell::new(new_pet))));
-							},
-
-							connect_apply[sender] => move |entry| {
-								sender.input(Self::Input::SendPetBack);
-								entry.set_text("");
-							},
-
-							connect_map => move |entry| {
-								entry.grab_focus();
-							},
-						}
-					}
+				adw::Bin {
+					#[wrap(Some)]
+					set_child = model.add_pet_view.widget(),
 				}
 			} else {
 				adw::Bin {
@@ -112,8 +88,12 @@ impl SimpleComponent for Model {
 		let model = Self {
 			selected_pet: init.pet,
 			is_adding_pet: false,
-			new_pet: None,
 			visible_pane: Panes::PetDetails,
+			add_pet_view: add_pet_view::Model::builder()
+				.launch(add_pet_view::Init)
+				.forward(sender.input_sender(), |output| match output {
+					add_pet_view::Output::AddPet(pet) => Self::Input::SendPetBack(pet),
+				}),
 			details_view: details_view::Model::builder()
 				.launch(details_view::Init)
 				.detach(),
@@ -141,22 +121,17 @@ impl SimpleComponent for Model {
 				self.selected_pet = None;
 				self.is_adding_pet = true;
 			}
-			Self::Input::UpdatePet(pet) => {
-				self.new_pet = Some(Rc::clone(&pet));
-			}
-			Self::Input::SendPetBack => {
+			Self::Input::SendPetBack(pet) => {
 				// This is a workaround to avoid moving the RC out of `self` in `view!`
 				// using `output` directly.
-				if let Some(pet) = &self.new_pet {
-					sender
-						.output(Self::Output::AddPet(Rc::clone(pet)))
-						.expect("Should be able to send message to parent");
-					sender.input(Self::Input::ShowPetDetails(Rc::clone(pet)));
-					self.details_view
-						.sender()
-						.send(details_view::Input::SetPet(Rc::clone(pet)))
-						.expect("Should be able to send message to child");
-				}
+				sender
+					.output(Self::Output::AddPet(Rc::clone(&pet)))
+					.expect("Should be able to send message to parent");
+				sender.input(Self::Input::ShowPetDetails(Rc::clone(&pet)));
+				self.details_view
+					.sender()
+					.send(details_view::Input::SetPet(Rc::clone(&pet)))
+					.expect("Should be able to send message to child");
 			}
 			Self::Input::SetVisiblePane(pane) => {
 				self.visible_pane = pane;
