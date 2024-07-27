@@ -32,6 +32,24 @@ impl fmt::Display for Gender {
 	}
 }
 
+impl ComboRow for Gender {
+	fn list() -> gtk::StringList {
+		gtk::StringList::new(&[&Self::Male.to_string(), &Self::Female.to_string()])
+	}
+}
+
+impl TryFrom<u32> for Gender {
+	type Error = ();
+
+	fn try_from(value: u32) -> Result<Self, Self::Error> {
+		match value {
+			0 => Ok(Self::Male),
+			1 => Ok(Self::Female),
+			_ => unreachable!("Index is too large"),
+		}
+	}
+}
+
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
 pub(crate) enum Species {
 	#[default]
@@ -44,6 +62,24 @@ impl fmt::Display for Species {
 		match self {
 			Self::Cat => write!(f, "Cat"),
 			Self::Dog => write!(f, "Dog"),
+		}
+	}
+}
+
+impl ComboRow for Species {
+	fn list() -> gtk::StringList {
+		gtk::StringList::new(&[&Self::Cat.to_string(), &Self::Dog.to_string()])
+	}
+}
+
+impl TryFrom<u32> for Species {
+	type Error = ();
+
+	fn try_from(value: u32) -> Result<Self, Self::Error> {
+		match value {
+			0 => Ok(Self::Cat),
+			1 => Ok(Self::Dog),
+			_ => unreachable!("Index is too large"),
 		}
 	}
 }
@@ -107,4 +143,8 @@ impl Pet {
 			Age { year, .. } => format!("{year} years"),
 		}
 	}
+}
+
+pub(crate) trait ComboRow {
+	fn list() -> gtk::StringList;
 }
