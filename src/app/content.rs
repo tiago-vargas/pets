@@ -147,18 +147,15 @@ impl SimpleComponent for Model {
 			Self::Input::SendPetBack => {
 				// This is a workaround to avoid moving the RC out of `self` in `view!`
 				// using `output` directly.
-				match &self.new_pet {
-					Some(pet) => {
-						sender
-							.output(Self::Output::AddPet(Rc::clone(pet)))
-							.expect("Should be able to send message to parent");
-						sender.input(Self::Input::ShowPetDetails(Rc::clone(pet)));
-						self.details_view
-							.sender()
-							.send(details_view::Input::SetPet(Rc::clone(pet)))
-							.expect("Should be able to send message to child");
-					}
-					None => (),
+				if let Some(pet) = &self.new_pet {
+					sender
+						.output(Self::Output::AddPet(Rc::clone(pet)))
+						.expect("Should be able to send message to parent");
+					sender.input(Self::Input::ShowPetDetails(Rc::clone(pet)));
+					self.details_view
+						.sender()
+						.send(details_view::Input::SetPet(Rc::clone(pet)))
+						.expect("Should be able to send message to child");
 				}
 			}
 			Self::Input::SetVisiblePane(pane) => {
