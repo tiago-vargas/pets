@@ -1,3 +1,4 @@
+use adw::prelude::*;
 use relm4::prelude::*;
 
 pub(crate) struct Model;
@@ -11,8 +12,23 @@ impl SimpleComponent for Model {
 	type Output = ();
 
 	view! {
-		adw::StatusPage {
-			set_title: "No Pet Selected",
+		adw::ToolbarView {
+			add_top_bar = &adw::HeaderBar {
+				#[wrap(Some)]
+				set_title_widget = &gtk::Label {
+					set_text: "Pet Details",
+					add_css_class: "heading",
+				},
+			},
+
+			#[wrap(Some)]
+			set_content = &adw::Clamp {
+				set_margin_all: 16,
+
+				adw::StatusPage {
+					set_title: "No Pet Selected",
+				},
+			},
 		}
 	}
 

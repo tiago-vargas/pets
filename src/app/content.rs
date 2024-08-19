@@ -1,4 +1,3 @@
-use adw::prelude::*;
 use relm4::prelude::*;
 
 use crate::app::pet;
@@ -46,62 +45,19 @@ impl SimpleComponent for Model {
 	type Output = Output;
 
 	view! {
-		adw::ToolbarView {
-			add_top_bar = &adw::HeaderBar {
-				pack_start = &gtk::Button {
-					set_label: "Cancel",
-					#[watch] set_visible: model.is_in_edit_mode(),
+		gtk::Stack {
+			set_transition_type: gtk::StackTransitionType::Crossfade,
 
-					connect_clicked[sender] => move |_| {
-						sender.input(Self::Input::SetVisiblePane(Panes::PetDetails));
-					},
-				},
+			add_named[Some(Panes::NoPetSelected.as_ref())] =
+				model.no_pet_selected_view.widget(),
+			add_named[Some(Panes::AddPet.as_ref())] =
+				model.add_pet_view.widget(),
+			add_named[Some(Panes::PetDetails.as_ref())] =
+				model.details_view.widget(),
+			add_named[Some(Panes::EditPet.as_ref())] =
+				model.edit_view.widget(),
 
-				#[wrap(Some)]
-				set_title_widget = &gtk::Label {
-					#[watch] set_text: model.visible_pane.as_ref(),
-					add_css_class: "heading",
-				},
-
-				pack_end = &gtk::Button {
-					set_label: "Edit",
-					#[watch] set_visible: !model.is_in_edit_mode(),
-
-					connect_clicked[sender] => move |_| {
-						sender.input(Self::Input::SetVisiblePane(Panes::EditPet));
-					},
-				},
-
-				pack_end = &gtk::Button {
-					set_label: "Apply",
-					add_css_class: "suggested-action",
-					#[watch] set_visible: model.is_in_edit_mode(),
-
-					connect_clicked[sender] => move |_| {
-						sender.input(Self::Input::ApplyChanges);
-					},
-				},
-			},
-
-			#[wrap(Some)]
-			set_content = &adw::Clamp {
-				set_margin_all: 16,
-
-				gtk::Stack {
-					set_transition_type: gtk::StackTransitionType::Crossfade,
-
-					add_named[Some(Panes::NoPetSelected.as_ref())] =
-						model.no_pet_selected_view.widget(),
-					add_named[Some(Panes::AddPet.as_ref())] =
-						model.add_pet_view.widget(),
-					add_named[Some(Panes::PetDetails.as_ref())] =
-						model.details_view.widget(),
-					add_named[Some(Panes::EditPet.as_ref())] =
-						model.edit_view.widget(),
-
-					#[watch] set_visible_child_name: model.visible_pane.as_ref(),
-				},
-			},
+			#[watch] set_visible_child_name: model.visible_pane.as_ref(),
 		}
 	}
 
@@ -123,10 +79,15 @@ impl SimpleComponent for Model {
 				}),
 			details_view: details_view::Model::builder()
 				.launch(details_view::Init)
-				.detach(),
+				.forward(sender.input_sender(), |output| match output {
+					details_view::Output::SetVisiblePane(pane) => Self::Input::SetVisiblePane(pane),
+				}),
 			edit_view: edit_view::Model::builder()
 				.launch(edit_view::Init)
-				.detach(),
+				.forward(sender.input_sender(), |output| match output {
+					edit_view::Output::ApplyChanges => Self::Input::ApplyChanges,
+					edit_view::Output::SetVisiblePane(pane) => Self::Input::SetVisiblePane(pane),
+				}),
 		};
 
 		let widgets = view_output!();
@@ -186,11 +147,5 @@ impl AsRef<str> for Panes {
 			Panes::PetDetails => "Pet Details",
 			Panes::EditPet => "Edit Pet",
 		}
-	}
-}
-
-impl Model {
-	fn is_in_edit_mode(&self) -> bool {
-		matches!(self.visible_pane, Panes::EditPet)
 	}
 }

@@ -36,98 +36,113 @@ impl SimpleComponent for Model {
 	type Output = Output;
 
 	view! {
-		gtk::Box {
-			set_orientation: gtk::Orientation::Vertical,
-			set_spacing: 16,
-
-			gtk::ListBox {
-				add_css_class: "boxed-list",
-
-				adw::EntryRow {
-					set_title: "Name",
-
-					connect_changed[sender] => move |entry| {
-						let name = String::from(entry.text());
-						sender.input(Self::Input::SetName(name));
-					},
-
-					connect_map => move |entry| {
-						entry.grab_focus();
-						entry.set_text("");
-					},
+		adw::ToolbarView {
+			add_top_bar = &adw::HeaderBar {
+				#[wrap(Some)]
+				set_title_widget = &gtk::Label {
+					set_text: "Add Pet",
+					add_css_class: "heading",
 				},
+			},
 
-				adw::ComboRow {
-					set_title: "Species",
+			#[wrap(Some)]
+			set_content = &adw::Clamp {
+				set_margin_all: 16,
 
-					set_model: Some(&Species::list()),
-					#[watch] set_selected: model.sandbox_pet.borrow().species as u32,
+				gtk::Box {
+					set_orientation: gtk::Orientation::Vertical,
+					set_spacing: 16,
 
-					connect_selected_notify[sender] => move |this| {
-						sender.input(Self::Input::SetSpecies(this.selected()));
-					},
-				},
+					gtk::ListBox {
+						add_css_class: "boxed-list",
 
-				adw::ComboRow {
-					set_title: "Gender",
+						adw::EntryRow {
+							set_title: "Name",
 
-					set_model: Some(&Gender::list()),
-					#[watch] set_selected: model.sandbox_pet.borrow().gender as u32,
+							connect_changed[sender] => move |entry| {
+								let name = String::from(entry.text());
+								sender.input(Self::Input::SetName(name));
+							},
 
-					connect_selected_notify[sender] => move |this| {
-						sender.input(Self::Input::SetGender(this.selected()));
-					},
-				},
+							connect_map => move |entry| {
+								entry.grab_focus();
+								entry.set_text("");
+							},
+						},
 
-				adw::ActionRow {
-					set_title: "Birthdate",
+						adw::ComboRow {
+							set_title: "Species",
 
-					add_suffix = &gtk::MenuButton {
-						#[watch] set_label: &model.sandbox_pet.borrow().birthdate.0.format("%d/%m/%Y")
-							.expect("Format should exist"),
+							set_model: Some(&Species::list()),
+							#[watch] set_selected: model.sandbox_pet.borrow().species as u32,
 
-						set_valign: gtk::Align::Center,
+							connect_selected_notify[sender] => move |this| {
+								sender.input(Self::Input::SetSpecies(this.selected()));
+							},
+						},
 
-						#[wrap(Some)]
-						set_popover = &gtk::Popover {
-							gtk::Calendar {
-								#[watch] set_day: model.sandbox_pet.borrow().birthdate.0.day_of_month(),
-								#[watch] set_month: model.sandbox_pet.borrow().birthdate.0.month() - 1,
-								#[watch] set_year: model.sandbox_pet.borrow().birthdate.0.year(),
+						adw::ComboRow {
+							set_title: "Gender",
 
-								connect_day_selected[sender] => move |calendar| {
-									sender.input(Self::Input::SetBirthdate(calendar.date()))
+							set_model: Some(&Gender::list()),
+							#[watch] set_selected: model.sandbox_pet.borrow().gender as u32,
+
+							connect_selected_notify[sender] => move |this| {
+								sender.input(Self::Input::SetGender(this.selected()));
+							},
+						},
+
+						adw::ActionRow {
+							set_title: "Birthdate",
+
+							add_suffix = &gtk::MenuButton {
+								#[watch] set_label: &model.sandbox_pet.borrow().birthdate.0.format("%d/%m/%Y")
+									.expect("Format should exist"),
+
+								set_valign: gtk::Align::Center,
+
+								#[wrap(Some)]
+								set_popover = &gtk::Popover {
+									gtk::Calendar {
+										#[watch] set_day: model.sandbox_pet.borrow().birthdate.0.day_of_month(),
+										#[watch] set_month: model.sandbox_pet.borrow().birthdate.0.month() - 1,
+										#[watch] set_year: model.sandbox_pet.borrow().birthdate.0.year(),
+
+										connect_day_selected[sender] => move |calendar| {
+											sender.input(Self::Input::SetBirthdate(calendar.date()))
+										},
+									},
 								},
 							},
 						},
+
+						adw::ComboRow {
+							set_title: "Was spayed/neutered?",
+
+							set_model: Some(&gtk::StringList::new(&["No", "Yes"])),
+							#[watch] set_selected: model.sandbox_pet.borrow().was_sterilized as u32,
+
+							connect_selected_notify[sender] => move |combo_row| {
+								sender.input(Self::Input::SetWasSterilized(combo_row.selected()));
+							},
+						},
+					},
+
+					gtk::Button {
+						set_label: "Apply",
+						add_css_class: "suggested-action",
+
+						connect_clicked[sender] => move |_| {
+							sender.input(Self::Input::Confirm);
+						},
+					},
+
+					connect_unmap => move |_| {
+						sender.input(Self::Input::Discard);
 					},
 				},
-
-				adw::ComboRow {
-					set_title: "Was spayed/neutered?",
-
-					set_model: Some(&gtk::StringList::new(&["No", "Yes"])),
-					#[watch] set_selected: model.sandbox_pet.borrow().was_sterilized as u32,
-
-					connect_selected_notify[sender] => move |combo_row| {
-						sender.input(Self::Input::SetWasSterilized(combo_row.selected()));
-					},
-				},
 			},
-
-			gtk::Button {
-				set_label: "Apply",
-				add_css_class: "suggested-action",
-
-				connect_clicked[sender] => move |_| {
-					sender.input(Self::Input::Confirm);
-				},
-			},
-
-			connect_unmap => move |_| {
-				sender.input(Self::Input::Discard);
-			},
-		},
+		}
 	}
 
 	fn init(
