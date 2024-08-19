@@ -11,7 +11,7 @@ mod modals;
 mod pet;
 mod settings;
 
-use pet::pet_row;
+use pet::{pet_row, Pet};
 use pet_row::Sort;
 
 const DATA_FILE_NAME: &str = "data.yaml";
@@ -26,7 +26,7 @@ pub(crate) struct Model {
 pub(crate) enum Input {
 	SavePets,
 	LoadPets,
-	AddPetRow(Rc<RefCell<pet::Pet>>),
+	AddPetRow(Rc<RefCell<Pet>>),
 	SelectPetRow(usize),
 	ShowAddPetPane,
 
@@ -189,14 +189,14 @@ impl SimpleComponent for Model {
 				let pets = self
 					.pet_rows
 					.iter()
-					.map(|pet_row| pet::Pet {
+					.map(|pet_row| Pet {
 						name: pet_row.pet.borrow().name.clone(),
 						gender: pet_row.pet.borrow().gender,
 						species: pet_row.pet.borrow().species,
 						birthdate: pet_row.pet.borrow().birthdate.clone(),
 						was_sterilized: pet_row.pet.borrow().was_sterilized,
 					})
-					.collect::<Vec<pet::Pet>>();
+					.collect::<Vec<Pet>>();
 
 				let mut path = gtk::glib::user_data_dir();
 				path.push(APP_ID);
@@ -214,7 +214,7 @@ impl SimpleComponent for Model {
 				path.push(DATA_FILE_NAME);
 
 				if let Ok(file) = fs::File::open(path) {
-					let pets: Vec<pet::Pet> = serde_yml::from_reader(file)
+					let pets: Vec<Pet> = serde_yml::from_reader(file)
 						.expect("Should be able to read data from YAML file.");
 
 					for pet in pets {

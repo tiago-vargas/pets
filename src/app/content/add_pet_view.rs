@@ -2,14 +2,13 @@ use adw::prelude::*;
 use gtk::glib;
 use relm4::prelude::*;
 
-use crate::app::pet;
-use pet::{ComboRow, Gender, Species};
+use crate::app::pet::{ComboRow, Gender, Pet, Species};
 use std::{cell::RefCell, rc::Rc};
 
 pub(crate) struct Model {
 	// You play around with this pet until you're satisfied with it.
 	// Then create it, or dicard it.
-	sandbox_pet: Rc<RefCell<pet::Pet>>,
+	sandbox_pet: Rc<RefCell<Pet>>,
 }
 
 pub(crate) struct Init;
@@ -27,7 +26,7 @@ pub(crate) enum Input {
 
 #[derive(Debug)]
 pub(crate) enum Output {
-	AddPet(Rc<RefCell<pet::Pet>>),
+	AddPet(Rc<RefCell<Pet>>),
 }
 
 #[relm4::component(pub(crate))]
@@ -137,7 +136,7 @@ impl SimpleComponent for Model {
 		root: Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let default_pet = Rc::new(RefCell::new(pet::Pet::default()));
+		let default_pet = Rc::new(RefCell::new(Pet::default()));
 		let model = Self {
 			sandbox_pet: default_pet,
 		};
@@ -155,7 +154,7 @@ impl SimpleComponent for Model {
 					.expect("Should be able to send message to parent");
 			}
 			Self::Input::Discard => {
-				let default_pet = pet::Pet::default();
+				let default_pet = Pet::default();
 				self.sandbox_pet = Rc::new(RefCell::new(default_pet));
 			}
 			Self::Input::SetName(name) => {

@@ -4,12 +4,14 @@ use relm4::prelude::*;
 use crate::app::pet;
 use std::{cell::RefCell, rc::Rc};
 
+use super::pet::Pet;
+
 mod add_pet_view;
 mod details_view;
 mod edit_view;
 
 pub(crate) struct Model {
-	selected_pet: Option<Rc<RefCell<pet::Pet>>>,
+	selected_pet: Option<Rc<RefCell<Pet>>>,
 	is_adding_pet: bool,
 	visible_pane: Panes,
 	add_pet_view: Controller<add_pet_view::Model>,
@@ -18,21 +20,21 @@ pub(crate) struct Model {
 }
 
 pub(crate) struct Init {
-	pub(crate) pet: Option<Rc<RefCell<pet::Pet>>>,
+	pub(crate) pet: Option<Rc<RefCell<Pet>>>,
 }
 
 #[derive(Debug)]
 pub(crate) enum Input {
-	ShowPetDetails(Rc<RefCell<pet::Pet>>),
+	ShowPetDetails(Rc<RefCell<Pet>>),
 	ShowAddPetPane,
-	SendPetBack(Rc<RefCell<pet::Pet>>),
+	SendPetBack(Rc<RefCell<Pet>>),
 	SetVisiblePane(Panes),
 	ApplyChanges,
 }
 
 #[derive(Debug)]
 pub(crate) enum Output {
-	AddPet(Rc<RefCell<pet::Pet>>),
+	AddPet(Rc<RefCell<Pet>>),
 }
 
 #[relm4::component(pub(crate))]
