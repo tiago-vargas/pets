@@ -90,25 +90,22 @@ impl SimpleComponent for Model {
 						set_child = model.add_pet_view.widget(),
 					}
 				} else {
-					adw::Bin {
-						match &model.selected_pet {  // `match` needs an outer widget
-							None => adw::StatusPage {
-								set_title: "No Pet Selected",
-							}
-							Some(_) => &adw::Clamp {
-								set_margin_all: 16,
+					adw::Clamp {
+						set_margin_all: 16,
 
-								gtk::Stack {
-									set_transition_type: gtk::StackTransitionType::Crossfade,
-									#[watch] set_visible_child_name: model.visible_pane.as_ref(),
+						gtk::Stack {
+							set_transition_type: gtk::StackTransitionType::Crossfade,
+							#[watch] set_visible_child_name: model.visible_pane.as_ref(),
 
-									add_named[Some(Panes::PetDetails.as_ref())] =
-										model.details_view.widget(),
-									add_named[Some(Panes::EditPet.as_ref())] =
-										model.edit_view.widget(),
+							add_named[Some(Panes::NoPetSelected.as_ref())] =
+								&adw::StatusPage {
+									set_title: "No Pet Selected",
 								},
-							}
-						}
+							add_named[Some(Panes::PetDetails.as_ref())] =
+								model.details_view.widget(),
+							add_named[Some(Panes::EditPet.as_ref())] =
+								model.edit_view.widget(),
+						},
 					}
 				}
 			},
@@ -123,7 +120,7 @@ impl SimpleComponent for Model {
 		let model = Self {
 			selected_pet: init.pet,
 			is_adding_pet: false,
-			visible_pane: Panes::PetDetails,
+			visible_pane: Panes::NoPetSelected,
 			add_pet_view: add_pet_view::Model::builder()
 				.launch(add_pet_view::Init)
 				.forward(sender.input_sender(), |output| match output {
@@ -149,6 +146,7 @@ impl SimpleComponent for Model {
 					.sender()
 					.send(details_view::Input::SetPet(Rc::clone(&pet)))
 					.expect("Should be able to send message to child");
+				sender.input(Self::Input::SetVisiblePane(Panes::PetDetails));
 				self.selected_pet = Some(pet);
 				self.is_adding_pet = false;
 			}
@@ -180,6 +178,7 @@ impl SimpleComponent for Model {
 
 #[derive(Debug)]
 pub(crate) enum Panes {
+	NoPetSelected,
 	PetDetails,
 	EditPet,
 }
@@ -187,6 +186,7 @@ pub(crate) enum Panes {
 impl AsRef<str> for Panes {
 	fn as_ref(&self) -> &str {
 		match self {
+			Panes::NoPetSelected => "No Pet Selected",
 			Panes::PetDetails => "Pet Details",
 			Panes::EditPet => "Edit Pet",
 		}
@@ -195,9 +195,6 @@ impl AsRef<str> for Panes {
 
 impl Model {
 	fn is_in_edit_mode(&self) -> bool {
-		match self.visible_pane {
-			Panes::EditPet => true,
-			Panes::PetDetails => false,
-		}
+		matches!(self.visible_pane, Panes::EditPet)
 	}
 }
