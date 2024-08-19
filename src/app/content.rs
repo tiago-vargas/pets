@@ -70,8 +70,8 @@ impl SimpleComponent for Model {
 										model.details_view.widget(),
 									add_named[Some(Panes::EditPet.as_ref())] =
 										model.edit_view.widget(),
-								}
-							}
+								},
+							},
 						}
 					}
 				}
@@ -99,7 +99,7 @@ impl SimpleComponent for Model {
 			edit_view: edit_view::Model::builder()
 				.launch(edit_view::Init)
 				.detach(),
-			};
+		};
 
 		let widgets = view_output!();
 

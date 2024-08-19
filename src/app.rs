@@ -38,7 +38,6 @@ pub(crate) enum Input {
 #[relm4::component(pub(crate))]
 impl SimpleComponent for Model {
 	type Init = ();
-
 	type Input = Input;
 	type Output = ();
 
@@ -161,14 +160,13 @@ impl SimpleComponent for Model {
 		window: Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let pet_rows =
-			FactoryVecDeque::<pet_row::Model>::builder().launch_default().detach();
+		let pet_rows = FactoryVecDeque::<pet_row::Model>::builder()
+			.launch_default()
+			.detach();
 		let content = content::Model::builder()
 			.launch(content::Init { pet: None })
-			.forward(sender.input_sender(), |response| {
-				match response {
-					content::Output::AddPet(pet) => Self::Input::AddPetRow(pet),
-				}
+			.forward(sender.input_sender(), |response| match response {
+				content::Output::AddPet(pet) => Self::Input::AddPetRow(pet),
 			});
 		let model = Model {
 			content,
@@ -188,7 +186,8 @@ impl SimpleComponent for Model {
 	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
 		match message {
 			Self::Input::SavePets => {
-				let pets = self.pet_rows
+				let pets = self
+					.pet_rows
 					.iter()
 					.map(|pet_row| pet::Pet {
 						name: pet_row.pet.borrow().name.clone(),
@@ -201,12 +200,10 @@ impl SimpleComponent for Model {
 
 				let mut path = gtk::glib::user_data_dir();
 				path.push(APP_ID);
-				fs::create_dir_all(&path)
-					.expect("Should be able to create directory.");
+				fs::create_dir_all(&path).expect("Should be able to create directory.");
 
 				path.push(DATA_FILE_NAME);
-				let file = fs::File::create(path)
-					.expect("Should be able to create YAML file.");
+				let file = fs::File::create(path).expect("Should be able to create YAML file.");
 
 				serde_yml::to_writer(file, &pets)
 					.expect("Should be able to write data to YAML file");
@@ -234,9 +231,7 @@ impl SimpleComponent for Model {
 				let selected_pet = &self.pet_rows[index].pet;
 				self.content
 					.sender()
-					.send(content::Input::ShowPetDetails(Rc::clone(
-						selected_pet
-					)))
+					.send(content::Input::ShowPetDetails(Rc::clone(selected_pet)))
 					.expect("Should be able to forward message to child");
 			}
 			Self::Input::ShowAddPetPane => {
@@ -247,17 +242,23 @@ impl SimpleComponent for Model {
 			}
 
 			Self::Input::ShowEditPetView => {
-				self.content.sender().send(content::Input::SetVisiblePane(content::Panes::EditPet))
+				self.content
+					.sender()
+					.send(content::Input::SetVisiblePane(content::Panes::EditPet))
 					.expect("Should be able to send message to child component");
 				self.current_view = content::Panes::EditPet;
 			}
 			Self::Input::ShowPetDetailsView => {
-				self.content.sender().send(content::Input::SetVisiblePane(content::Panes::PetDetails))
+				self.content
+					.sender()
+					.send(content::Input::SetVisiblePane(content::Panes::PetDetails))
 					.expect("Should be able to send message to child component");
 				self.current_view = content::Panes::PetDetails;
 			}
 			Self::Input::ApplyChanges => {
-				self.content.sender().send(content::Input::ApplyChanges)
+				self.content
+					.sender()
+					.send(content::Input::ApplyChanges)
 					.expect("Should be able to send message to child component");
 				self.current_view = content::Panes::PetDetails;
 			}
