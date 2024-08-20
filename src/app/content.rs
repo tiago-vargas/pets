@@ -9,10 +9,12 @@ use super::pet::Pet;
 mod add_pet_view;
 mod details_view;
 mod edit_view;
+mod no_pet_selected_view;
 
 pub(crate) struct Model {
 	selected_pet: Option<Rc<RefCell<Pet>>>,
 	pub(crate) visible_pane: Panes,
+	no_pet_selected_view: Controller<no_pet_selected_view::Model>,
 	add_pet_view: Controller<add_pet_view::Model>,
 	details_view: Controller<details_view::Model>,
 	edit_view: Controller<edit_view::Model>,
@@ -89,9 +91,7 @@ impl SimpleComponent for Model {
 					set_transition_type: gtk::StackTransitionType::Crossfade,
 
 					add_named[Some(Panes::NoPetSelected.as_ref())] =
-						&adw::StatusPage {
-							set_title: "No Pet Selected",
-						},
+						model.no_pet_selected_view.widget(),
 					add_named[Some(Panes::AddPet.as_ref())] =
 						model.add_pet_view.widget(),
 					add_named[Some(Panes::PetDetails.as_ref())] =
@@ -113,6 +113,9 @@ impl SimpleComponent for Model {
 		let model = Self {
 			selected_pet: init.pet,
 			visible_pane: Panes::NoPetSelected,
+			no_pet_selected_view: no_pet_selected_view::Model::builder()
+				.launch(no_pet_selected_view::Init)
+				.detach(),
 			add_pet_view: add_pet_view::Model::builder()
 				.launch(add_pet_view::Init)
 				.forward(sender.input_sender(), |output| match output {
