@@ -60,19 +60,14 @@ impl SimpleComponent for Model {
 						Some(_) => &adw::Clamp {
 							set_margin_all: 16,
 
-							gtk::Box {
-								set_orientation: gtk::Orientation::Vertical,
-								set_spacing: 16,
+							gtk::Stack {
+								set_transition_type: gtk::StackTransitionType::Crossfade,
+								#[watch] set_visible_child_name: model.visible_pane.as_ref(),
 
-								gtk::Stack {
-									set_transition_type: gtk::StackTransitionType::Crossfade,
-									#[watch] set_visible_child_name: model.visible_pane.as_ref(),
-
-									add_named[Some(Panes::PetDetails.as_ref())] =
-										model.details_view.widget(),
-									add_named[Some(Panes::EditPet.as_ref())] =
-										model.edit_view.widget(),
-								},
+								add_named[Some(Panes::PetDetails.as_ref())] =
+									model.details_view.widget(),
+								add_named[Some(Panes::EditPet.as_ref())] =
+									model.edit_view.widget(),
 							},
 						}
 					}
