@@ -13,7 +13,7 @@ mod edit_view;
 pub(crate) struct Model {
 	selected_pet: Option<Rc<RefCell<Pet>>>,
 	is_adding_pet: bool,
-	visible_pane: Panes,
+	pub(crate) visible_pane: Panes,
 	add_pet_view: Controller<add_pet_view::Model>,
 	details_view: Controller<details_view::Model>,
 	edit_view: Controller<edit_view::Model>,
@@ -45,34 +45,73 @@ impl SimpleComponent for Model {
 	type Output = Output;
 
 	view! {
-		adw::Bin {  // `if` needs an outer widget
-			if model.is_adding_pet {
-				adw::Bin {
-					#[wrap(Some)]
-					set_child = model.add_pet_view.widget(),
-				}
-			} else {
-				adw::Bin {
-					match &model.selected_pet {  // `match` needs an outer widget
-						None => adw::StatusPage {
-							set_title: "No Pet Selected",
-						}
-						Some(_) => &adw::Clamp {
-							set_margin_all: 16,
+		adw::ToolbarView {
+			add_top_bar = &adw::HeaderBar {
+				pack_start = &gtk::Button {
+					set_label: "Cancel",
+					#[watch] set_visible: model.is_in_edit_mode(),
 
-							gtk::Stack {
-								set_transition_type: gtk::StackTransitionType::Crossfade,
-								#[watch] set_visible_child_name: model.visible_pane.as_ref(),
+					connect_clicked[sender] => move |_| {
+						sender.input(Self::Input::SetVisiblePane(Panes::PetDetails));
+					},
+				},
 
-								add_named[Some(Panes::PetDetails.as_ref())] =
-									model.details_view.widget(),
-								add_named[Some(Panes::EditPet.as_ref())] =
-									model.edit_view.widget(),
-							},
+				#[wrap(Some)]
+				set_title_widget = &gtk::Label {
+					#[watch] set_text: model.visible_pane.as_ref(),
+					add_css_class: "heading",
+				},
+
+				pack_end = &gtk::Button {
+					set_label: "Edit",
+					#[watch] set_visible: !model.is_in_edit_mode(),
+
+					connect_clicked[sender] => move |_| {
+						sender.input(Self::Input::SetVisiblePane(Panes::EditPet));
+					},
+				},
+
+				pack_end = &gtk::Button {
+					set_label: "Apply",
+					add_css_class: "suggested-action",
+					#[watch] set_visible: model.is_in_edit_mode(),
+
+					connect_clicked[sender] => move |_| {
+						sender.input(Self::Input::ApplyChanges);
+					},
+				},
+			},
+
+			#[wrap(Some)]
+			set_content = &adw::Bin {  // `if` needs an outer widget
+				if model.is_adding_pet {
+					adw::Bin {
+						#[wrap(Some)]
+						set_child = model.add_pet_view.widget(),
+					}
+				} else {
+					adw::Bin {
+						match &model.selected_pet {  // `match` needs an outer widget
+							None => adw::StatusPage {
+								set_title: "No Pet Selected",
+							}
+							Some(_) => &adw::Clamp {
+								set_margin_all: 16,
+
+								gtk::Stack {
+									set_transition_type: gtk::StackTransitionType::Crossfade,
+									#[watch] set_visible_child_name: model.visible_pane.as_ref(),
+
+									add_named[Some(Panes::PetDetails.as_ref())] =
+										model.details_view.widget(),
+									add_named[Some(Panes::EditPet.as_ref())] =
+										model.edit_view.widget(),
+								},
+							}
 						}
 					}
 				}
-			}
+			},
 		}
 	}
 
@@ -150,6 +189,15 @@ impl AsRef<str> for Panes {
 		match self {
 			Panes::PetDetails => "Pet Details",
 			Panes::EditPet => "Edit Pet",
+		}
+	}
+}
+
+impl Model {
+	fn is_in_edit_mode(&self) -> bool {
+		match self.visible_pane {
+			Panes::EditPet => true,
+			Panes::PetDetails => false,
 		}
 	}
 }
