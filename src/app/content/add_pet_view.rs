@@ -38,7 +38,6 @@ impl SimpleComponent for Model {
 	view! {
 		gtk::Box {
 			set_orientation: gtk::Orientation::Vertical,
-			set_margin_all: 16,
 			set_spacing: 16,
 
 			gtk::ListBox {

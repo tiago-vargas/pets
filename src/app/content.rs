@@ -12,7 +12,6 @@ mod edit_view;
 
 pub(crate) struct Model {
 	selected_pet: Option<Rc<RefCell<Pet>>>,
-	is_adding_pet: bool,
 	pub(crate) visible_pane: Panes,
 	add_pet_view: Controller<add_pet_view::Model>,
 	details_view: Controller<details_view::Model>,
@@ -83,31 +82,25 @@ impl SimpleComponent for Model {
 			},
 
 			#[wrap(Some)]
-			set_content = &adw::Bin {  // `if` needs an outer widget
-				if model.is_adding_pet {
-					adw::Bin {
-						#[wrap(Some)]
-						set_child = model.add_pet_view.widget(),
-					}
-				} else {
-					adw::Clamp {
-						set_margin_all: 16,
+			set_content = &adw::Clamp {
+				set_margin_all: 16,
 
-						gtk::Stack {
-							set_transition_type: gtk::StackTransitionType::Crossfade,
-							#[watch] set_visible_child_name: model.visible_pane.as_ref(),
+				gtk::Stack {
+					set_transition_type: gtk::StackTransitionType::Crossfade,
 
-							add_named[Some(Panes::NoPetSelected.as_ref())] =
-								&adw::StatusPage {
-									set_title: "No Pet Selected",
-								},
-							add_named[Some(Panes::PetDetails.as_ref())] =
-								model.details_view.widget(),
-							add_named[Some(Panes::EditPet.as_ref())] =
-								model.edit_view.widget(),
+					add_named[Some(Panes::NoPetSelected.as_ref())] =
+						&adw::StatusPage {
+							set_title: "No Pet Selected",
 						},
-					}
-				}
+					add_named[Some(Panes::AddPet.as_ref())] =
+						model.add_pet_view.widget(),
+					add_named[Some(Panes::PetDetails.as_ref())] =
+						model.details_view.widget(),
+					add_named[Some(Panes::EditPet.as_ref())] =
+						model.edit_view.widget(),
+
+					#[watch] set_visible_child_name: model.visible_pane.as_ref(),
+				},
 			},
 		}
 	}
@@ -119,7 +112,6 @@ impl SimpleComponent for Model {
 	) -> ComponentParts<Self> {
 		let model = Self {
 			selected_pet: init.pet,
-			is_adding_pet: false,
 			visible_pane: Panes::NoPetSelected,
 			add_pet_view: add_pet_view::Model::builder()
 				.launch(add_pet_view::Init)
@@ -148,11 +140,10 @@ impl SimpleComponent for Model {
 					.expect("Should be able to send message to child");
 				sender.input(Self::Input::SetVisiblePane(Panes::PetDetails));
 				self.selected_pet = Some(pet);
-				self.is_adding_pet = false;
 			}
 			Self::Input::ShowAddPetPane => {
 				self.selected_pet = None;
-				self.is_adding_pet = true;
+				sender.input(Self::Input::SetVisiblePane(Panes::AddPet));
 			}
 			Self::Input::SendPetBack(pet) => {
 				// This is a workaround to avoid moving the RC out of `self` in `view!`
@@ -179,6 +170,7 @@ impl SimpleComponent for Model {
 #[derive(Debug)]
 pub(crate) enum Panes {
 	NoPetSelected,
+	AddPet,
 	PetDetails,
 	EditPet,
 }
@@ -187,6 +179,7 @@ impl AsRef<str> for Panes {
 	fn as_ref(&self) -> &str {
 		match self {
 			Panes::NoPetSelected => "No Pet Selected",
+			Panes::AddPet => "Add Pet",
 			Panes::PetDetails => "Pet Details",
 			Panes::EditPet => "Edit Pet",
 		}
