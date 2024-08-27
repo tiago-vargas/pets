@@ -11,7 +11,7 @@ mod modals;
 mod pet;
 mod settings;
 
-use pet::pet_row;
+use pet::{pet_row, Pet};
 use pet_row::Sort;
 
 const DATA_FILE_NAME: &str = "data.yaml";
@@ -19,26 +19,20 @@ const DATA_FILE_NAME: &str = "data.yaml";
 pub(crate) struct Model {
 	content: Controller<content::Model>,
 	pet_rows: FactoryVecDeque<pet_row::Model>,
-	current_view: content::Panes,
 }
 
 #[derive(Debug)]
 pub(crate) enum Input {
 	SavePets,
 	LoadPets,
-	AddPetRow(Rc<RefCell<pet::Pet>>),
+	AddPetRow(Rc<RefCell<Pet>>),
 	SelectPetRow(usize),
 	ShowAddPetPane,
-
-	ShowEditPetView,
-	ShowPetDetailsView,
-	ApplyChanges,
 }
 
 #[relm4::component(pub(crate))]
 impl SimpleComponent for Model {
 	type Init = ();
-
 	type Input = Input;
 	type Output = ();
 
@@ -105,43 +99,12 @@ impl SimpleComponent for Model {
 
 				#[wrap(Some)]
 				set_content = &adw::NavigationPage {
-					#[watch] set_title: model.current_view.as_ref(),
+					// This title isn't supposed to appear, but navigation pages want it
+					// This will be overwritten by the title of its child's header bar
+					set_title: "Content",
 
 					#[wrap(Some)]
-					set_child = &adw::ToolbarView {
-						add_top_bar = &adw::HeaderBar {
-							pack_start = &gtk::Button {
-								set_label: "Cancel",
-								#[watch] set_visible: model.is_in_edit_mode(),
-
-								connect_clicked[sender] => move |_| {
-									sender.input(Input::ShowPetDetailsView);
-								},
-							},
-
-							pack_end = &gtk::Button {
-								set_label: "Edit",
-								#[watch] set_visible: !model.is_in_edit_mode(),
-
-								connect_clicked[sender] => move |_| {
-									sender.input(Input::ShowEditPetView);
-								},
-							},
-
-							pack_end = &gtk::Button {
-								set_label: "Apply",
-								add_css_class: "suggested-action",
-								#[watch] set_visible: model.is_in_edit_mode(),
-
-								connect_clicked[sender] => move |_| {
-									sender.input(Input::ApplyChanges);
-								},
-							},
-						},
-
-						#[wrap(Some)]
-						set_content = model.content.widget(),
-					},
+					set_child = model.content.widget(),
 				},
 			},
 
@@ -161,19 +124,17 @@ impl SimpleComponent for Model {
 		window: Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let pet_rows =
-			FactoryVecDeque::<pet_row::Model>::builder().launch_default().detach();
+		let pet_rows = FactoryVecDeque::<pet_row::Model>::builder()
+			.launch_default()
+			.detach();
 		let content = content::Model::builder()
 			.launch(content::Init { pet: None })
-			.forward(sender.input_sender(), |response| {
-				match response {
-					content::Output::AddPet(pet) => Self::Input::AddPetRow(pet),
-				}
+			.forward(sender.input_sender(), |response| match response {
+				content::Output::AddPet(pet) => Self::Input::AddPetRow(pet),
 			});
 		let model = Model {
 			content,
 			pet_rows,
-			current_view: content::Panes::PetDetails,
 		};
 
 		let pet_list_box = model.pet_rows.widget();
@@ -188,19 +149,24 @@ impl SimpleComponent for Model {
 	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
 		match message {
 			Self::Input::SavePets => {
-				let pets = self.pet_rows
+				let pets = self
+					.pet_rows
 					.iter()
-					.map(|pet_row| pet::Pet { name: pet_row.pet.borrow().name.clone() })
-					.collect::<Vec<pet::Pet>>();
+					.map(|pet_row| Pet {
+						name: pet_row.pet.borrow().name.clone(),
+						gender: pet_row.pet.borrow().gender,
+						species: pet_row.pet.borrow().species,
+						birthdate: pet_row.pet.borrow().birthdate.clone(),
+						was_sterilized: pet_row.pet.borrow().was_sterilized,
+					})
+					.collect::<Vec<Pet>>();
 
 				let mut path = gtk::glib::user_data_dir();
 				path.push(APP_ID);
-				fs::create_dir_all(&path)
-					.expect("Should be able to create directory.");
+				fs::create_dir_all(&path).expect("Should be able to create directory.");
 
 				path.push(DATA_FILE_NAME);
-				let file = fs::File::create(path)
-					.expect("Should be able to create YAML file.");
+				let file = fs::File::create(path).expect("Should be able to create YAML file.");
 
 				serde_yml::to_writer(file, &pets)
 					.expect("Should be able to write data to YAML file");
@@ -211,7 +177,7 @@ impl SimpleComponent for Model {
 				path.push(DATA_FILE_NAME);
 
 				if let Ok(file) = fs::File::open(path) {
-					let pets: Vec<pet::Pet> = serde_yml::from_reader(file)
+					let pets: Vec<Pet> = serde_yml::from_reader(file)
 						.expect("Should be able to read data from YAML file.");
 
 					for pet in pets {
@@ -228,9 +194,7 @@ impl SimpleComponent for Model {
 				let selected_pet = &self.pet_rows[index].pet;
 				self.content
 					.sender()
-					.send(content::Input::ShowPetDetails(Rc::clone(
-						selected_pet
-					)))
+					.send(content::Input::ShowPetDetails(Rc::clone(selected_pet)))
 					.expect("Should be able to forward message to child");
 			}
 			Self::Input::ShowAddPetPane => {
@@ -239,35 +203,10 @@ impl SimpleComponent for Model {
 					.send(content::Input::ShowAddPetPane)
 					.expect("Should be able to forward message to child");
 			}
-
-			Self::Input::ShowEditPetView => {
-				self.content.sender().send(content::Input::SetVisiblePane(content::Panes::EditPet))
-					.expect("Should be able to send message to child component");
-				self.current_view = content::Panes::EditPet;
-			}
-			Self::Input::ShowPetDetailsView => {
-				self.content.sender().send(content::Input::SetVisiblePane(content::Panes::PetDetails))
-					.expect("Should be able to send message to child component");
-				self.current_view = content::Panes::PetDetails;
-			}
-			Self::Input::ApplyChanges => {
-				self.content.sender().send(content::Input::ApplyChanges)
-					.expect("Should be able to send message to child component");
-				self.current_view = content::Panes::PetDetails;
-			}
 		}
 	}
 
 	fn shutdown(&mut self, widgets: &mut Self::Widgets, _output: relm4::Sender<Self::Output>) {
 		Self::save_window_state(widgets);
-	}
-}
-
-impl Model {
-	fn is_in_edit_mode(&self) -> bool {
-		match self.current_view {
-			content::Panes::EditPet => true,
-			content::Panes::PetDetails => false,
-		}
 	}
 }
