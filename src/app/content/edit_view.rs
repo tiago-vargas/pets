@@ -11,6 +11,7 @@ pub(crate) struct Init;
 pub(crate) enum Output {
 	ApplyChanges,
 	SetVisiblePane(Panes),
+	DeletePet,
 }
 
 #[relm4::component(pub(crate))]
@@ -50,11 +51,19 @@ impl SimpleComponent for Model {
 			set_content = &adw::Clamp {
 				set_margin_all: 16,
 
-				gtk::Label {
-					set_label: "Edit View",
-					set_margin_all: 4,
-					set_css_classes: &["title-1"],
-					set_vexpand: true,
+				adw::StatusPage {
+					set_title: "Edit View",
+
+					#[wrap(Some)]
+					set_child = &gtk::Button {
+						set_label: "Delete",
+						add_css_class: "destructive-action",
+
+						connect_clicked => move |_this| {
+							_ = sender.output(Self::Output::SetVisiblePane(Panes::NoPetSelected));
+							_ = sender.output(Self::Output::DeletePet)
+						},
+					}
 				},
 			},
 		}

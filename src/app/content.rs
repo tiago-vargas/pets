@@ -30,11 +30,13 @@ pub(crate) enum Input {
 	SendPetBack(Rc<RefCell<Pet>>),
 	SetVisiblePane(Panes),
 	ApplyChanges,
+	RemoveSelectedPet,
 }
 
 #[derive(Debug)]
 pub(crate) enum Output {
 	AddPet(Rc<RefCell<Pet>>),
+	RemoveSelectedPet,
 }
 
 #[relm4::component(pub(crate))]
@@ -87,6 +89,7 @@ impl SimpleComponent for Model {
 				.forward(sender.input_sender(), |output| match output {
 					edit_view::Output::ApplyChanges => Self::Input::ApplyChanges,
 					edit_view::Output::SetVisiblePane(pane) => Self::Input::SetVisiblePane(pane),
+					edit_view::Output::DeletePet => Self::Input::RemoveSelectedPet,
 				}),
 		};
 
@@ -126,6 +129,10 @@ impl SimpleComponent for Model {
 			}
 			Self::Input::ApplyChanges => {
 				sender.input(Self::Input::SetVisiblePane(Panes::PetDetails));
+			}
+			Self::Input::RemoveSelectedPet => {
+				self.selected_pet = None;
+				_ = sender.output(Self::Output::RemoveSelectedPet);
 			}
 		}
 	}
