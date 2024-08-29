@@ -3,9 +3,19 @@ use relm4::prelude::*;
 
 use super::Panes;
 
-pub(crate) struct Model;
+mod confirmation_dialog;
+
+pub(crate) struct Model {
+	confirmation_dialog: Controller<confirmation_dialog::Model>,
+}
 
 pub(crate) struct Init;
+
+#[derive(Debug)]
+pub(crate) enum Input {
+	ShowConfirmationDialog,
+	DeletePet,
+}
 
 #[derive(Debug)]
 pub(crate) enum Output {
@@ -17,7 +27,7 @@ pub(crate) enum Output {
 #[relm4::component(pub(crate))]
 impl SimpleComponent for Model {
 	type Init = Init;
-	type Input = ();
+	type Input = Input;
 	type Output = Output;
 
 	view! {
@@ -60,8 +70,7 @@ impl SimpleComponent for Model {
 						add_css_class: "destructive-action",
 
 						connect_clicked => move |_this| {
-							_ = sender.output(Self::Output::SetVisiblePane(Panes::NoPetSelected));
-							_ = sender.output(Self::Output::DeletePet)
+							sender.input(Self::Input::ShowConfirmationDialog);
 						},
 					}
 				},
@@ -74,12 +83,30 @@ impl SimpleComponent for Model {
 		root: Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let model = Self ;
+		let model = Self {
+			confirmation_dialog: confirmation_dialog::Model::builder()
+				.transient_for(&root)
+				.launch(confirmation_dialog::Init)
+				.forward(sender.input_sender(), |output| match output {
+					confirmation_dialog::Output::DeletePet => Self::Input::DeletePet,
+				}),
+		};
 		let widgets = view_output!();
 		ComponentParts { model, widgets }
 	}
 
-	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
-		let () = message;
+	fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
+		match message {
+			Self::Input::ShowConfirmationDialog => {
+				_ = self
+					.confirmation_dialog
+					.sender()
+					.send(confirmation_dialog::Input::Present);
+			}
+			Self::Input::DeletePet => {
+				_ = sender.output(Self::Output::SetVisiblePane(Panes::NoPetSelected));
+				_ = sender.output(Self::Output::DeletePet);
+			}
+		}
 	}
 }
