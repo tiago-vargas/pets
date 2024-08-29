@@ -19,6 +19,7 @@ const DATA_FILE_NAME: &str = "data.yaml";
 pub(crate) struct Model {
 	content: Controller<content::Model>,
 	pet_rows: FactoryVecDeque<pet_row::Model>,
+	selected_row: Option<usize>,
 }
 
 #[derive(Debug)]
@@ -28,6 +29,7 @@ pub(crate) enum Input {
 	AddPetRow(Rc<RefCell<Pet>>),
 	SelectPetRow(usize),
 	ShowAddPetPane,
+	RemoveSelectedPetRow,
 }
 
 #[relm4::component(pub(crate))]
@@ -131,10 +133,12 @@ impl SimpleComponent for Model {
 			.launch(content::Init { pet: None })
 			.forward(sender.input_sender(), |response| match response {
 				content::Output::AddPet(pet) => Self::Input::AddPetRow(pet),
+				content::Output::RemoveSelectedPet => Self::Input::RemoveSelectedPetRow,
 			});
 		let model = Model {
 			content,
 			pet_rows,
+			selected_row: None,
 		};
 
 		let pet_list_box = model.pet_rows.widget();
@@ -191,11 +195,19 @@ impl SimpleComponent for Model {
 				self.pet_rows.guard().push_sorted(pet_row::Init { pet });
 			}
 			Self::Input::SelectPetRow(index) => {
+				self.selected_row = Some(index);
+
 				let selected_pet = &self.pet_rows[index].pet;
 				self.content
 					.sender()
 					.send(content::Input::ShowPetDetails(Rc::clone(selected_pet)))
 					.expect("Should be able to forward message to child");
+			}
+			Self::Input::RemoveSelectedPetRow => {
+				if let Some(index) = self.selected_row {
+					self.pet_rows.guard().remove(index);
+					self.selected_row = None;
+				}
 			}
 			Self::Input::ShowAddPetPane => {
 				self.content
