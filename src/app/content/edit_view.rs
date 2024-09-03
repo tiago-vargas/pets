@@ -72,7 +72,7 @@ impl SimpleComponent for Model {
 						connect_clicked => move |_this| {
 							sender.input(Self::Input::ShowConfirmationDialog);
 						},
-					}
+					},
 				},
 			},
 		}
@@ -91,7 +91,9 @@ impl SimpleComponent for Model {
 					confirmation_dialog::Output::DeletePet => Self::Input::DeletePet,
 				}),
 		};
+
 		let widgets = view_output!();
+
 		ComponentParts { model, widgets }
 	}
 

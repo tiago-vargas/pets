@@ -1,8 +1,11 @@
+use std::{cell::RefCell, rc::Rc};
+
 use adw::prelude::*;
 use relm4::prelude::*;
 
-use std::{cell::RefCell, rc::Rc};
-use super::{pet::Pet, Panes};
+use crate::app::pet::Pet;
+
+use super::Panes;
 
 pub(crate) struct Model {
 	pet: Rc<RefCell<Pet>>,

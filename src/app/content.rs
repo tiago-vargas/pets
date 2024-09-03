@@ -1,9 +1,8 @@
-use relm4::prelude::*;
-
-use crate::app::pet;
 use std::{cell::RefCell, rc::Rc};
 
-use super::pet::Pet;
+use relm4::prelude::*;
+
+use crate::app::pet::Pet;
 
 mod add_pet_view;
 mod details_view;
