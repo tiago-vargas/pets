@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{cell::RefCell, fmt, rc::Rc};
 
 use gtk::glib;
 use relm4::prelude::*;
@@ -141,6 +141,18 @@ impl Pet {
 			Age { year: 0, month, ..} => format!("{month} months"),
 			Age { year: 1, .. } => String::from("1 year"),
 			Age { year, .. } => format!("{year} years"),
+		}
+	}
+}
+
+impl From<&Rc<RefCell<Pet>>> for Pet {
+	fn from(pet: &Rc<RefCell<Pet>>) -> Self {
+		Self {
+			name: pet.borrow().name.clone(),
+			gender: pet.borrow().gender,
+			species: pet.borrow().species,
+			birthdate: pet.borrow().birthdate.clone(),
+			was_sterilized: pet.borrow().was_sterilized,
 		}
 	}
 }

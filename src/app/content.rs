@@ -28,7 +28,7 @@ pub(crate) enum Input {
 	ShowAddPetPane,
 	SendPetBack(Rc<RefCell<Pet>>),
 	SetVisiblePane(Panes),
-	ApplyChanges,
+	ApplyChanges(Pet),
 	RemoveSelectedPet,
 }
 
@@ -86,7 +86,7 @@ impl SimpleComponent for Model {
 			edit_view: edit_view::Model::builder()
 				.launch(edit_view::Init)
 				.forward(sender.input_sender(), |output| match output {
-					edit_view::Output::ApplyChanges => Self::Input::ApplyChanges,
+					edit_view::Output::ApplyChanges(pet) => Self::Input::ApplyChanges(pet),
 					edit_view::Output::SetVisiblePane(pane) => Self::Input::SetVisiblePane(pane),
 					edit_view::Output::DeletePet => Self::Input::RemoveSelectedPet,
 				}),
@@ -124,9 +124,24 @@ impl SimpleComponent for Model {
 					.expect("Should be able to send message to child");
 			}
 			Self::Input::SetVisiblePane(pane) => {
+				if matches!(pane, Panes::EditPet) {
+					self.edit_view
+						.sender()
+						.send(edit_view::Input::SetPet(Rc::clone(self.selected_pet.as_ref().unwrap())))
+						.expect("Should be able to send message to child");
+				}
+
 				self.visible_pane = pane;
 			}
-			Self::Input::ApplyChanges => {
+			Self::Input::ApplyChanges(pet) => {
+				if let Some(old_pet) = &self.selected_pet {
+					old_pet.borrow_mut().name = pet.name.clone();
+					old_pet.borrow_mut().gender = pet.gender;
+					old_pet.borrow_mut().species = pet.species;
+					old_pet.borrow_mut().birthdate = pet.birthdate.clone();
+					old_pet.borrow_mut().was_sterilized = pet.was_sterilized;
+				}
+
 				sender.input(Self::Input::SetVisiblePane(Panes::PetDetails));
 			}
 			Self::Input::RemoveSelectedPet => {
