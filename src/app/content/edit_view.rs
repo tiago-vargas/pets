@@ -36,7 +36,6 @@ pub(crate) enum Input {
 
 #[derive(Debug)]
 pub(crate) enum Output {
-	ApplyChanges(Pet),
 	SetVisiblePane(Panes),
 	DeletePet,
 }
@@ -203,15 +202,13 @@ impl SimpleComponent for Model {
 				self.original_pet = pet;
 			}
 			Self::Input::ApplyChanges => {
-				let pet = Pet {
-					name: self.sandbox_pet.name.clone(),
-					gender: self.sandbox_pet.gender,
-					species: self.sandbox_pet.species,
-					birthdate: self.sandbox_pet.birthdate.clone(),
-					was_sterilized: self.sandbox_pet.was_sterilized,
-				};
+				self.original_pet.borrow_mut().name = self.sandbox_pet.name.clone();
+				self.original_pet.borrow_mut().gender = self.sandbox_pet.gender;
+				self.original_pet.borrow_mut().species = self.sandbox_pet.species;
+				self.original_pet.borrow_mut().birthdate = self.sandbox_pet.birthdate.clone();
+				self.original_pet.borrow_mut().was_sterilized = self.sandbox_pet.was_sterilized;
 
-				_ = sender.output(Self::Output::ApplyChanges(pet));
+				_ = sender.output(Self::Output::SetVisiblePane(Panes::PetDetails));
 			}
 			Self::Input::DiscardChanges => {
 				self.sandbox_pet = Pet::default();
