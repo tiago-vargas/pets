@@ -26,7 +26,7 @@ pub(crate) struct Init {
 pub(crate) enum Input {
 	ShowPetDetails(Rc<RefCell<Pet>>),
 	ShowAddPetPane,
-	SendPetBack(Rc<RefCell<Pet>>),
+	AddPetAndShowTheirDetails(Rc<RefCell<Pet>>),
 	SetVisiblePane(Panes),
 	RemoveSelectedPet,
 }
@@ -75,7 +75,7 @@ impl SimpleComponent for Model {
 			add_pet_view: add_pet_view::Model::builder()
 				.launch(add_pet_view::Init)
 				.forward(sender.input_sender(), |output| match output {
-					add_pet_view::Output::AddPet(pet) => Self::Input::SendPetBack(pet),
+					add_pet_view::Output::AddPet(pet) => Self::Input::AddPetAndShowTheirDetails(pet),
 				}),
 			details_view: details_view::Model::builder()
 				.launch(details_view::Init)
@@ -109,7 +109,7 @@ impl SimpleComponent for Model {
 				self.selected_pet = None;
 				sender.input(Self::Input::SetVisiblePane(Panes::AddPet));
 			}
-			Self::Input::SendPetBack(pet) => {
+			Self::Input::AddPetAndShowTheirDetails(pet) => {
 				// This is a workaround to avoid moving the RC out of `self` in `view!`
 				// using `output` directly.
 				sender
