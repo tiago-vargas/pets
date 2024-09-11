@@ -116,10 +116,6 @@ impl SimpleComponent for Model {
 					.output(Self::Output::AddPet(Rc::clone(&pet)))
 					.expect("Should be able to send message to parent");
 				sender.input(Self::Input::ShowPetDetails(Rc::clone(&pet)));
-				self.details_view
-					.sender()
-					.send(details_view::Input::SetPet(Rc::clone(&pet)))
-					.expect("Should be able to send message to child");
 			}
 			Self::Input::SetVisiblePane(pane) => {
 				if matches!(pane, Panes::EditPet) {
