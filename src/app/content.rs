@@ -40,7 +40,6 @@ pub(crate) enum Output {
 #[relm4::component(pub(crate))]
 impl SimpleComponent for Model {
 	type Init = Init;
-
 	type Input = Input;
 	type Output = Output;
 
