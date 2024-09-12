@@ -80,7 +80,7 @@ impl SimpleComponent for Model {
 			details_view: details_view::Model::builder()
 				.launch(details_view::Init)
 				.forward(sender.input_sender(), |output| match output {
-					details_view::Output::SetVisiblePane(pane) => Self::Input::SetVisiblePane(pane),
+					details_view::Output::ShowEditPet => Self::Input::SetVisiblePane(Panes::EditPet),
 				}),
 			edit_view: edit_view::Model::builder()
 				.launch(edit_view::Init)

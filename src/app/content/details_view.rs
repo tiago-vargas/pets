@@ -5,8 +5,6 @@ use relm4::prelude::*;
 
 use crate::app::pet::Pet;
 
-use super::Panes;
-
 pub(crate) struct Model {
 	pet: Rc<RefCell<Pet>>,
 }
@@ -20,7 +18,7 @@ pub(crate) enum Input {
 
 #[derive(Debug)]
 pub(crate) enum Output {
-	SetVisiblePane(Panes),
+	ShowEditPet,
 }
 
 #[relm4::component(pub(crate))]
@@ -42,7 +40,7 @@ impl SimpleComponent for Model {
 					set_label: "Edit",
 
 					connect_clicked[sender] => move |_| {
-						_ = sender.output(Self::Output::SetVisiblePane(Panes::EditPet));
+						_ = sender.output(Self::Output::ShowEditPet);
 					},
 				},
 			},
