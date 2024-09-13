@@ -14,6 +14,7 @@ pub(crate) struct Init;
 #[derive(Debug)]
 pub(crate) enum Input {
 	SetPet(Rc<RefCell<Pet>>),
+	RedrawView,
 }
 
 #[derive(Debug)]
@@ -128,6 +129,7 @@ impl SimpleComponent for Model {
 			Self::Input::SetPet(pet) => {
 				self.pet = pet;
 			}
+			Self::Input::RedrawView => (),
 		}
 	}
 }

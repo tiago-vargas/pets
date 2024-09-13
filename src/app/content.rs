@@ -117,11 +117,20 @@ impl SimpleComponent for Model {
 				sender.input(Self::Input::ShowPetDetails(Rc::clone(&pet)));
 			}
 			Self::Input::SetVisiblePane(pane) => {
-				if matches!(pane, Panes::EditPet) {
-					self.edit_view
-						.sender()
-						.send(edit_view::Input::SetPet(Rc::clone(self.selected_pet.as_ref().unwrap())))
-						.expect("Should be able to send message to child");
+				match pane {
+					Panes::PetDetails => {
+						self.details_view
+							.sender()
+							.send(details_view::Input::RedrawView)
+							.expect("Should be able to send message to child");
+					},
+					Panes::EditPet => {
+						self.edit_view
+							.sender()
+							.send(edit_view::Input::SetPet(Rc::clone(self.selected_pet.as_ref().unwrap())))
+							.expect("Should be able to send message to child");
+					}
+					Panes::NoPetSelected | Panes::AddPet => (),
 				}
 
 				self.visible_pane = pane;
