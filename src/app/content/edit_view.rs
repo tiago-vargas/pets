@@ -36,6 +36,7 @@ pub(crate) enum Input {
 pub(crate) enum Output {
 	DismissPane,
 	DeletePet,
+	UpdateSidebar,
 }
 
 #[relm4::component(pub(crate))]
@@ -200,6 +201,15 @@ impl SimpleComponent for Model {
 				self.original_pet = pet;
 			}
 			Self::Input::ApplyChanges => {
+				{
+					let old_name = &self.original_pet.borrow().name;
+					let new_name = &self.sandbox_pet.name;
+					let name_was_changed = new_name != old_name;
+					if name_was_changed {
+						_ = sender.output(Self::Output::UpdateSidebar);
+					}
+				}
+
 				self.original_pet.borrow_mut().name = self.sandbox_pet.name.clone();
 				self.original_pet.borrow_mut().gender = self.sandbox_pet.gender;
 				self.original_pet.borrow_mut().species = self.sandbox_pet.species;

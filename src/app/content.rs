@@ -29,6 +29,7 @@ pub(crate) enum Input {
 	AddPetAndShowTheirDetails(Rc<RefCell<Pet>>),
 	SetVisiblePane(Panes),
 	RemoveSelectedPet,
+	UpdateSidebar,
 }
 
 #[derive(Debug)]
@@ -86,6 +87,7 @@ impl SimpleComponent for Model {
 				.forward(sender.input_sender(), |output| match output {
 					edit_view::Output::DismissPane => Self::Input::SetVisiblePane(Panes::PetDetails),
 					edit_view::Output::DeletePet => Self::Input::RemoveSelectedPet,
+					edit_view::Output::UpdateSidebar => Self::Input::UpdateSidebar,
 				}),
 		};
 
@@ -139,6 +141,12 @@ impl SimpleComponent for Model {
 				self.selected_pet = None;
 				sender.input(Self::Input::SetVisiblePane(Panes::NoPetSelected));
 				_ = sender.output(Self::Output::RemoveSelectedPet);
+			}
+			Self::Input::UpdateSidebar => {
+				let pet = self.selected_pet.as_ref().unwrap();
+				// Only useful if `pet` has a new name
+				_ = sender.output(Self::Output::RemoveSelectedPet);
+				_ = sender.output(Self::Output::AddPet(Rc::clone(pet)));
 			}
 		}
 	}

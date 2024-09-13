@@ -192,7 +192,8 @@ impl SimpleComponent for Model {
 				}
 			}
 			Self::Input::AddPetRow(pet) => {
-				self.pet_rows.guard().push_sorted(pet_row::Init { pet });
+				let index = self.pet_rows.guard().push_sorted(pet_row::Init { pet });
+				self.selected_row = Some(index);
 			}
 			Self::Input::SelectPetRow(index) => {
 				self.selected_row = Some(index);
