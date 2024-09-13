@@ -6,8 +6,6 @@ use relm4::prelude::*;
 
 use crate::app::pet::{ComboRow, Gender, Pet, Species};
 
-use super::Panes;
-
 mod confirmation_dialog;
 
 pub(crate) struct Model {
@@ -36,7 +34,7 @@ pub(crate) enum Input {
 
 #[derive(Debug)]
 pub(crate) enum Output {
-	SetVisiblePane(Panes),
+	DismissPane,
 	DeletePet,
 }
 
@@ -53,7 +51,7 @@ impl SimpleComponent for Model {
 					set_label: "Cancel",
 
 					connect_clicked[sender] => move |_| {
-						_ = sender.output(Self::Output::SetVisiblePane(Panes::PetDetails));
+						_ = sender.output(Self::Output::DismissPane);
 					},
 				},
 
@@ -208,7 +206,7 @@ impl SimpleComponent for Model {
 				self.original_pet.borrow_mut().birthdate = self.sandbox_pet.birthdate.clone();
 				self.original_pet.borrow_mut().was_sterilized = self.sandbox_pet.was_sterilized;
 
-				_ = sender.output(Self::Output::SetVisiblePane(Panes::PetDetails));
+				_ = sender.output(Self::Output::DismissPane);
 			}
 			Self::Input::DiscardChanges => {
 				self.sandbox_pet = Pet::default();
@@ -241,7 +239,6 @@ impl SimpleComponent for Model {
 					.send(confirmation_dialog::Input::Present);
 			}
 			Self::Input::DeletePet => {
-				_ = sender.output(Self::Output::SetVisiblePane(Panes::NoPetSelected));
 				_ = sender.output(Self::Output::DeletePet);
 			}
 		}

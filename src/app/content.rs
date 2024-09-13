@@ -84,7 +84,7 @@ impl SimpleComponent for Model {
 			edit_view: edit_view::Model::builder()
 				.launch(edit_view::Init)
 				.forward(sender.input_sender(), |output| match output {
-					edit_view::Output::SetVisiblePane(pane) => Self::Input::SetVisiblePane(pane),
+					edit_view::Output::DismissPane => Self::Input::SetVisiblePane(Panes::PetDetails),
 					edit_view::Output::DeletePet => Self::Input::RemoveSelectedPet,
 				}),
 		};
@@ -128,6 +128,7 @@ impl SimpleComponent for Model {
 			}
 			Self::Input::RemoveSelectedPet => {
 				self.selected_pet = None;
+				sender.input(Self::Input::SetVisiblePane(Panes::NoPetSelected));
 				_ = sender.output(Self::Output::RemoveSelectedPet);
 			}
 		}
