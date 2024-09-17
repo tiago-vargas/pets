@@ -11,6 +11,7 @@ mod modals;
 mod pet;
 mod settings;
 
+use content::Panes;
 use pet::{pet_row, Pet};
 use pet_row::Sort;
 
@@ -53,6 +54,9 @@ impl SimpleComponent for Model {
 			add_css_class?: if BUILD_TYPE == "debug" { Some("devel") } else { None },
 
 			adw::NavigationSplitView {
+				#[watch] set_collapsed: model.pet_rows.is_empty(),
+				#[watch] set_show_content: matches!(model.content.model().visible_pane, Panes::AddPet),
+
 				#[wrap(Some)]
 				set_sidebar = &adw::NavigationPage {
 					set_title: "Pets",
