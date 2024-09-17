@@ -54,11 +54,11 @@ impl FactoryComponent for Model {
 }
 
 pub(crate) trait Sort {
-	fn push_sorted(&mut self, pet_row: Init);
+	fn push_sorted(&mut self, pet_row: Init) -> usize;
 }
 
 impl Sort for relm4::factory::FactoryVecDequeGuard<'_, Model> {
-	fn push_sorted(&mut self, pet_row: Init) {
+	fn push_sorted(&mut self, pet_row: Init) -> usize {
 		let index = {
 			let name = &pet_row.pet.borrow().name;
 
@@ -75,7 +75,7 @@ impl Sort for relm4::factory::FactoryVecDequeGuard<'_, Model> {
 			find_index_to_insert(&names, name)
 		};
 
-		self.insert(index, pet_row);
+		self.insert(index, pet_row).current_index()
 	}
 }
 

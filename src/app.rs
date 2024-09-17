@@ -165,7 +165,7 @@ impl SimpleComponent for Model {
 					})
 					.collect::<Vec<Pet>>();
 
-				let mut path = gtk::glib::user_data_dir();
+				let mut path = glib::user_data_dir();
 				path.push(APP_ID);
 				fs::create_dir_all(&path).expect("Should be able to create directory.");
 
@@ -176,7 +176,7 @@ impl SimpleComponent for Model {
 					.expect("Should be able to write data to YAML file");
 			}
 			Self::Input::LoadPets => {
-				let mut path = gtk::glib::user_data_dir();
+				let mut path = glib::user_data_dir();
 				path.push(APP_ID);
 				path.push(DATA_FILE_NAME);
 
@@ -192,7 +192,8 @@ impl SimpleComponent for Model {
 				}
 			}
 			Self::Input::AddPetRow(pet) => {
-				self.pet_rows.guard().push_sorted(pet_row::Init { pet });
+				let index = self.pet_rows.guard().push_sorted(pet_row::Init { pet });
+				self.selected_row = Some(index);
 			}
 			Self::Input::SelectPetRow(index) => {
 				self.selected_row = Some(index);

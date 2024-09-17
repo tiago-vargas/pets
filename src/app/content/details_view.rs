@@ -1,8 +1,9 @@
+use std::{cell::RefCell, rc::Rc};
+
 use adw::prelude::*;
 use relm4::prelude::*;
 
-use std::{cell::RefCell, rc::Rc};
-use super::{pet::Pet, Panes};
+use crate::app::pet::Pet;
 
 pub(crate) struct Model {
 	pet: Rc<RefCell<Pet>>,
@@ -13,11 +14,12 @@ pub(crate) struct Init;
 #[derive(Debug)]
 pub(crate) enum Input {
 	SetPet(Rc<RefCell<Pet>>),
+	RedrawView,
 }
 
 #[derive(Debug)]
 pub(crate) enum Output {
-	SetVisiblePane(Panes),
+	ShowEditPet,
 }
 
 #[relm4::component(pub(crate))]
@@ -39,7 +41,7 @@ impl SimpleComponent for Model {
 					set_label: "Edit",
 
 					connect_clicked[sender] => move |_| {
-						_ = sender.output(Self::Output::SetVisiblePane(Panes::EditPet));
+						_ = sender.output(Self::Output::ShowEditPet);
 					},
 				},
 			},
@@ -127,6 +129,7 @@ impl SimpleComponent for Model {
 			Self::Input::SetPet(pet) => {
 				self.pet = pet;
 			}
+			Self::Input::RedrawView => (),
 		}
 	}
 }

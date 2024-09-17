@@ -1,9 +1,8 @@
-use relm4::prelude::*;
-
-use crate::app::pet;
 use std::{cell::RefCell, rc::Rc};
 
-use super::pet::Pet;
+use relm4::prelude::*;
+
+use crate::app::pet::Pet;
 
 mod add_pet_view;
 mod details_view;
@@ -27,10 +26,10 @@ pub(crate) struct Init {
 pub(crate) enum Input {
 	ShowPetDetails(Rc<RefCell<Pet>>),
 	ShowAddPetPane,
-	SendPetBack(Rc<RefCell<Pet>>),
+	AddPetAndShowTheirDetails(Rc<RefCell<Pet>>),
 	SetVisiblePane(Panes),
-	ApplyChanges,
 	RemoveSelectedPet,
+	UpdateSidebar,
 }
 
 #[derive(Debug)]
@@ -42,7 +41,6 @@ pub(crate) enum Output {
 #[relm4::component(pub(crate))]
 impl SimpleComponent for Model {
 	type Init = Init;
-
 	type Input = Input;
 	type Output = Output;
 
@@ -77,19 +75,19 @@ impl SimpleComponent for Model {
 			add_pet_view: add_pet_view::Model::builder()
 				.launch(add_pet_view::Init)
 				.forward(sender.input_sender(), |output| match output {
-					add_pet_view::Output::AddPet(pet) => Self::Input::SendPetBack(pet),
+					add_pet_view::Output::AddPet(pet) => Self::Input::AddPetAndShowTheirDetails(pet),
 				}),
 			details_view: details_view::Model::builder()
 				.launch(details_view::Init)
 				.forward(sender.input_sender(), |output| match output {
-					details_view::Output::SetVisiblePane(pane) => Self::Input::SetVisiblePane(pane),
+					details_view::Output::ShowEditPet => Self::Input::SetVisiblePane(Panes::EditPet),
 				}),
 			edit_view: edit_view::Model::builder()
 				.launch(edit_view::Init)
 				.forward(sender.input_sender(), |output| match output {
-					edit_view::Output::ApplyChanges => Self::Input::ApplyChanges,
-					edit_view::Output::SetVisiblePane(pane) => Self::Input::SetVisiblePane(pane),
+					edit_view::Output::DismissPane => Self::Input::SetVisiblePane(Panes::PetDetails),
 					edit_view::Output::DeletePet => Self::Input::RemoveSelectedPet,
+					edit_view::Output::UpdateSidebar => Self::Input::UpdateSidebar,
 				}),
 		};
 
@@ -112,27 +110,43 @@ impl SimpleComponent for Model {
 				self.selected_pet = None;
 				sender.input(Self::Input::SetVisiblePane(Panes::AddPet));
 			}
-			Self::Input::SendPetBack(pet) => {
+			Self::Input::AddPetAndShowTheirDetails(pet) => {
 				// This is a workaround to avoid moving the RC out of `self` in `view!`
 				// using `output` directly.
 				sender
 					.output(Self::Output::AddPet(Rc::clone(&pet)))
 					.expect("Should be able to send message to parent");
 				sender.input(Self::Input::ShowPetDetails(Rc::clone(&pet)));
-				self.details_view
-					.sender()
-					.send(details_view::Input::SetPet(Rc::clone(&pet)))
-					.expect("Should be able to send message to child");
 			}
 			Self::Input::SetVisiblePane(pane) => {
+				match pane {
+					Panes::PetDetails => {
+						self.details_view
+							.sender()
+							.send(details_view::Input::RedrawView)
+							.expect("Should be able to send message to child");
+					},
+					Panes::EditPet => {
+						self.edit_view
+							.sender()
+							.send(edit_view::Input::SetPet(Rc::clone(self.selected_pet.as_ref().unwrap())))
+							.expect("Should be able to send message to child");
+					}
+					Panes::NoPetSelected | Panes::AddPet => (),
+				}
+
 				self.visible_pane = pane;
-			}
-			Self::Input::ApplyChanges => {
-				sender.input(Self::Input::SetVisiblePane(Panes::PetDetails));
 			}
 			Self::Input::RemoveSelectedPet => {
 				self.selected_pet = None;
+				sender.input(Self::Input::SetVisiblePane(Panes::NoPetSelected));
 				_ = sender.output(Self::Output::RemoveSelectedPet);
+			}
+			Self::Input::UpdateSidebar => {
+				let pet = self.selected_pet.as_ref().unwrap();
+				// Only useful if `pet` has a new name
+				_ = sender.output(Self::Output::RemoveSelectedPet);
+				_ = sender.output(Self::Output::AddPet(Rc::clone(pet)));
 			}
 		}
 	}
