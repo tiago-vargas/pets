@@ -31,6 +31,8 @@ pub(crate) enum Input {
 	SelectPetRow(usize),
 	ShowAddPetPane,
 	RemoveSelectedPetRow,
+	// Only needed because `content`'s `visible_pane` is only updated **after** this view
+	RedrawView,
 }
 
 #[relm4::component(pub(crate))]
@@ -138,6 +140,7 @@ impl SimpleComponent for Model {
 			.forward(sender.input_sender(), |response| match response {
 				content::Output::AddPet(pet) => Self::Input::AddPetRow(pet),
 				content::Output::RemoveSelectedPet => Self::Input::RemoveSelectedPetRow,
+				content::Output::RedrawView => Self::Input::RedrawView,
 			});
 		let model = Model {
 			content,
@@ -220,6 +223,7 @@ impl SimpleComponent for Model {
 					.send(content::Input::ShowAddPetPane)
 					.expect("Should be able to forward message to child");
 			}
+			Self::Input::RedrawView => (),
 		}
 	}
 

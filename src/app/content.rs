@@ -36,6 +36,7 @@ pub(crate) enum Input {
 pub(crate) enum Output {
 	AddPet(Rc<RefCell<Pet>>),
 	RemoveSelectedPet,
+	RedrawView,
 }
 
 #[relm4::component(pub(crate))]
@@ -109,6 +110,7 @@ impl SimpleComponent for Model {
 			Self::Input::ShowAddPetPane => {
 				self.selected_pet = None;
 				sender.input(Self::Input::SetVisiblePane(Panes::AddPet));
+				_ = sender.output(Self::Output::RedrawView);
 			}
 			Self::Input::AddPetAndShowTheirDetails(pet) => {
 				// This is a workaround to avoid moving the RC out of `self` in `view!`
