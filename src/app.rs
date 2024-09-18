@@ -11,6 +11,7 @@ mod modals;
 mod pet;
 mod settings;
 
+use content::Panes;
 use pet::{pet_row, Pet};
 use pet_row::Sort;
 
@@ -30,6 +31,8 @@ pub(crate) enum Input {
 	SelectPetRow(usize),
 	ShowAddPetPane,
 	RemoveSelectedPetRow,
+	// Only needed because `content`'s `visible_pane` is only updated **after** this view
+	RedrawView,
 }
 
 #[relm4::component(pub(crate))]
@@ -53,6 +56,9 @@ impl SimpleComponent for Model {
 			add_css_class?: if BUILD_TYPE == "debug" { Some("devel") } else { None },
 
 			adw::NavigationSplitView {
+				#[watch] set_collapsed: model.pet_rows.is_empty(),
+				#[watch] set_show_content: matches!(model.content.model().visible_pane, Panes::AddPet),
+
 				#[wrap(Some)]
 				set_sidebar = &adw::NavigationPage {
 					set_title: "Pets",
@@ -134,6 +140,7 @@ impl SimpleComponent for Model {
 			.forward(sender.input_sender(), |response| match response {
 				content::Output::AddPet(pet) => Self::Input::AddPetRow(pet),
 				content::Output::RemoveSelectedPet => Self::Input::RemoveSelectedPetRow,
+				content::Output::RedrawView => Self::Input::RedrawView,
 			});
 		let model = Model {
 			content,
@@ -216,6 +223,7 @@ impl SimpleComponent for Model {
 					.send(content::Input::ShowAddPetPane)
 					.expect("Should be able to forward message to child");
 			}
+			Self::Input::RedrawView => (),
 		}
 	}
 
